@@ -7,15 +7,15 @@ export const register = async (req, res) => {
 
     const existingUser = await User.findOne({ $or: [{ email }, { username }] });
     if (existingUser) {
-      return res.status(400).json({ error: "Usuario o email ya en uso" });
+      return res.status(400).json({ error: "User or email already in use" });
     }
 
     const newUser = new User({ username, email, password });
     await newUser.save();
 
-    res.status(201).json({ message: "Usuario registrado con éxito" });
+    res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
-    res.status(500).json({ error: "Error en el servidor" });
+    res.status(500).json({ error: "Server error" });
   }
 };
 
@@ -25,22 +25,22 @@ export const login = async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ error: "Credenciales inválidas" });
+      return res.status(400).json({ error: "Invalid credentials" });
     }
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(400).json({ error: "Credenciales inválidas" });
+      return res.status(400).json({ error: "Invalid credentials" });
     }
 
     const token = jwt.sign(
-      { id: user._id, username: user.username },
+      { id: user._id, username: user.username, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "1d" },
     );
 
     res.json({
-      message: "Login exitoso",
+      message: "Login successful",
       token,
       user: {
         id: user._id,
@@ -49,6 +49,6 @@ export const login = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ error: "Error en el login" });
+    res.status(500).json({ error: "Login error" });
   }
 };

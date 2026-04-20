@@ -1,5 +1,6 @@
 import axios from "axios";
 import Song from "../models/Song.js";
+import User from "../models/User.js"
 
 export const addSong = async (req, res) => {
   try {
@@ -15,11 +16,11 @@ export const addSong = async (req, res) => {
     const savedSong = await newSong.save();
 
     res.status(201).json({
-      message: "Cancion guardada correctamente",
+      message: "Song saved successfully",
       song: savedSong,
     });
   } catch (error) {
-    res.status(500).json({ error: "Error al guardar la cancion", details: error.message });
+    res.status(500).json({ error: "Error saving the song", details: error.message });
   }
 };
 
@@ -28,7 +29,7 @@ export const getAllSongs = async (req, res) => {
     const songs = await Song.find();
     res.json(songs);
   } catch (error) {
-    res.status(500).json({ error: "Error al obtener canciones" });
+    res.status(500).json({ error: "Error fetching songs" });
   }
 };
 
@@ -36,16 +37,16 @@ export const updateSong = async (req, res) => {
   try {
     const { id } = req.params;
     const updatedSong = await Song.findByIdAndUpdate(id, req.body, {
-      new: true,
+      returnDocument: 'after',
     });
 
     if (!updatedSong) {
-      return res.status(404).json({ error: "No se encontro la cancion" });
+      return res.status(404).json({ error: "Song not found" });
     }
 
-    res.json({ message: "Cancion actualizada", song: updatedSong });
+    res.json({ message: "Song updated", song: updatedSong });
   } catch (error) {
-    res.status(500).json({ error: "Error al actualizar", details: error.message });
+    res.status(500).json({ error: "Error updating", details: error.message });
   }
 };
 
@@ -55,12 +56,12 @@ export const deleteSong = async (req, res) => {
     const deletedSong = await Song.findByIdAndDelete(id);
 
     if (!deletedSong) {
-      return res.status(404).json({ error: "No se encontro la cancion para borrar" });
+      return res.status(404).json({ error: "Song not found to delete" });
     }
 
-    res.json({ message: "Cancion eliminada correctamente" });
+    res.json({ message: "Song deleted successfully" });
   } catch (error) {
-    res.status(500).json({ error: "Error al eliminar", details: error.message });
+    res.status(500).json({ error: "Error deleting", details: error.message });
   }
 };
 
@@ -72,40 +73,49 @@ export const getRandomSong = async (req, res) => {
     const song = await Song.findOne().skip(random);
 
     if (!song) {
-      return res.status(404).json({ error: "No hay canciones cargadas" });
+      return res.status(404).json({ error: "No songs loaded" });
     }
 
     res.json(song);
   } catch (error) {
-    res.status(500).json({ error: "Error al obtener canción aleatoria" });
+    res.status(500).json({ error: "Error getting random song" });
   }
 };
 
 export const validateAnswer = async (req, res) => {
   try {
-    const { songId, answer } = req.body;
+    const { songId, answer, attempt } = req.body;
+    const userId = req.user.id;
 
     const song = await Song.findById(songId);
-    if (!song) {
-      return res.status(404).json({ error: "Canción no encontrada" });
-    }
 
     const isCorrect = song.title.toLowerCase().trim() === answer.toLowerCase().trim();
 
     if (isCorrect) {
+      // Calculamos puntos: si es el primer intento (attempt=1) suma 10. 
+      // Si es el segundo, suma 8, etc.
+      const pointsToSum = Math.max(10 - (attempt - 1) * 2, 2); // Mínimo 2 puntos por adivinar
+
+      const user = await User.findByIdAndUpdate(
+        userId,
+        { $inc: { points: pointsToSum } },
+        { returnDocument: 'after' }
+      );
+
       return res.json({
         correct: true,
-        message: "¡Adivinaste!",
-        fullData: song, // Aquí recién revelamos todo
-      });
-    } else {
-      return res.json({
-        correct: false,
-        message: "Sigue intentando",
+        pointsEarned: pointsToSum,
+        totalPoints: user.points,
+        fullData: song
       });
     }
+
+    // Si falla, el Front se encarga de mostrar "Error, te quedan X intentos"
+    // y en la próxima llamada mandará attempt: 2
+    res.json({ correct: false, message: "Incorrect" });
+
   } catch (error) {
-    res.status(500).json({ error: "Error al validar respuesta" });
+    res.status(500).json({ error: "Error in validation" });
   }
 };
 
@@ -114,7 +124,7 @@ export const searchExternalSong = async (req, res) => {
   try {
     const { query } = req.query; // Ejemplo: /search-external?query=skrillex
     if (!query) {
-      return res.status(400).json({ error: "Debes enviar un termino de busqueda" });
+      return res.status(400).json({ error: "You must send a search term" });
     }
 
     const response = await axios.get(`https://api.deezer.com/search?q=${query}`);
@@ -129,7 +139,7 @@ export const searchExternalSong = async (req, res) => {
 
     res.json(songs);
   } catch (error) {
-    res.status(500).json({ error: "Error al conectar con la API externa" });
+    res.status(500).json({ error: "Error connecting to external API" });
   }
 };
 
@@ -147,7 +157,7 @@ export const searchSongsInDb = async (req, res) => {
 
     res.json(songs);
   } catch (error) {
-    res.status(500).json({ error: "Error en el buscador" });
+    res.status(500).json({ error: "Error in the search" });
   }
 };
 
@@ -155,12 +165,12 @@ export const seedDatabase = async (req, res) => {
   // Si quieres mas precision, puedes usar 'artist:"Skrillex"'
   // Pero si quieres variedad, dejalos como strings simples.
   const artists = [
-    'artist:"Pantera"',
-    'artist:"Patricio Rey y sus Redonditos de Ricota"',
-    'artist:"Intoxicados"',
-    'artist:"The Rolling Stones"',
-    'artist:"Guns n Roses"',
-    'artist:"Linkin Park"',
+    // 'artist:"Pantera"',
+    // 'artist:"Patricio Rey y sus Redonditos de Ricota"',
+    // 'artist:"Intoxicados"',
+    // 'artist:"The Rolling Stones"',
+    // 'artist:"Guns n Roses"',
+    // 'artist:"Linkin Park"',
   ];
 
   let addedCount = 0;
@@ -177,7 +187,6 @@ export const seedDatabase = async (req, res) => {
       if (!tracks || tracks.length === 0) continue;
 
       for (const track of tracks) {
-        // Verificacion de duplicados por URL de preview
         const exists = await Song.findOne({ previewUrl: track.preview });
 
         if (!exists) {
@@ -196,14 +205,14 @@ export const seedDatabase = async (req, res) => {
     }
 
     res.json({
-      status: "Proceso completado",
-      nuevas_canciones: addedCount,
-      ignoradas_por_duplicadas: skippedCount,
-      total_en_db: await Song.countDocuments(),
+      status: "Process completed",
+      new_songs: addedCount,
+      skipped_due_to_duplicates: skippedCount,
+      total_in_db: await Song.countDocuments(),
     });
   } catch (error) {
     res.status(500).json({
-      error: "Error en el seeding masivo",
+      error: "Error in mass seeding",
       details: error.message,
     });
   }
