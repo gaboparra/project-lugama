@@ -9,6 +9,6 @@ const SongSchema = new mongoose.Schema(
     difficulty: { type: Number, default: 1 },
   },
   { timestamps: true },
-); // Agrega fecha de creación y actualización automáticamente
+);
 
 export default mongoose.model("Song", SongSchema);
