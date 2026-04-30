@@ -1,6 +1,6 @@
 import axios from "axios";
 import Song from "../models/Song.js";
-import User from "../models/User.js"
+import User from "../models/User.js";
 
 export const addSong = async (req, res) => {
   try {
@@ -37,7 +37,7 @@ export const updateSong = async (req, res) => {
   try {
     const { id } = req.params;
     const updatedSong = await Song.findByIdAndUpdate(id, req.body, {
-      returnDocument: 'after',
+      returnDocument: "after",
     });
 
     if (!updatedSong) {
@@ -92,28 +92,27 @@ export const validateAnswer = async (req, res) => {
     const isCorrect = song.title.toLowerCase().trim() === answer.toLowerCase().trim();
 
     if (isCorrect) {
-      // Calculamos puntos: si es el primer intento (attempt=1) suma 10. 
+      // Calculamos puntos: si es el primer intento (attempt=1) suma 10.
       // Si es el segundo, suma 8, etc.
       const pointsToSum = Math.max(10 - (attempt - 1) * 2, 2); // Mínimo 2 puntos por adivinar
 
       const user = await User.findByIdAndUpdate(
         userId,
         { $inc: { points: pointsToSum } },
-        { returnDocument: 'after' }
+        { returnDocument: "after" },
       );
 
       return res.json({
         correct: true,
         pointsEarned: pointsToSum,
         totalPoints: user.points,
-        fullData: song
+        fullData: song,
       });
     }
 
     // Si falla, el Front se encarga de mostrar "Error, te quedan X intentos"
     // y en la próxima llamada mandará attempt: 2
     res.json({ correct: false, message: "Incorrect" });
-
   } catch (error) {
     res.status(500).json({ error: "Error in validation" });
   }
@@ -127,17 +126,19 @@ export const searchExternalSong = async (req, res) => {
       return res.status(400).json({ error: "You must send a search term" });
     }
 
-    const response = await axios.get(`https://api.deezer.com/search?q=${query}`);
+    const response = await axios.get(
+      `https://api.deezer.com/search?q=${query}`,
+    );
 
     // Mapeamos solo la data que nos sirve para nuestro modelo
-const songs = response.data.data
-  .filter(song => song.preview && song.preview.includes("cdns-preview"))
-  .map((song) => ({
-    title: song.title,
-    artist: song.artist.name,
-    previewUrl: song.preview,
-    albumCover: song.album.cover_medium,
-  }));
+    const songs = response.data.data
+      .filter((song) => song.preview && song.preview.includes("cdns-preview"))
+      .map((song) => ({
+        title: song.title,
+        artist: song.artist.name,
+        previewUrl: song.preview,
+        albumCover: song.album.cover_medium,
+      }));
 
     res.json(songs);
   } catch (error) {
@@ -164,45 +165,42 @@ export const searchSongsInDb = async (req, res) => {
 };
 
 export const seedDatabase = async (req, res) => {
-  // Si quieres mas precision, puedes usar 'artist:"Skrillex"'
-  // Pero si quieres variedad, dejalos como strings simples.
-  const artists = [
-    // 'artist:"Pantera"',
-    // 'artist:"Patricio Rey y sus Redonditos de Ricota"',
-    // 'artist:"Intoxicados"',
-    // 'artist:"The Rolling Stones"',
-    // 'artist:"Guns n Roses"',
-    // 'artist:"Linkin Park"',
-  ];
+  const { artists } = req.body;
+
+  if (!artists || !Array.isArray(artists) || artists.length === 0) {
+    return res.status(400).json({
+      error:
+        "Debes enviar un array de artistas en el cuerpo de la petición (JSON).",
+    });
+  }
 
   let addedCount = 0;
   let skippedCount = 0;
 
   try {
     for (const artistQuery of artists) {
-      // Limite de 50 para tener mas margen de eleccion
+      // Usamos encodeURIComponent para manejar espacios y tildes (ej: "Charly García")
       const response = await axios.get(
-        `https://api.deezer.com/search?q=${artistQuery}&limit=50`,
+        `https://api.deezer.com/search?q=${encodeURIComponent(artistQuery)}&limit=50`,
       );
-      const tracks = response.data.data;
 
+      const tracks = response.data.data;
       if (!tracks || tracks.length === 0) continue;
 
       for (const track of tracks) {
-        if (!track.preview || !track.preview.includes("cdns-preview")) {
-  continue; // saltamos previews inválidos
-}
+        // Validamos que exista una URL de audio, sin importar el subdominio
+        if (!track.preview) continue;
 
-const exists = await Song.findOne({ previewUrl: track.preview });
+        const exists = await Song.findOne({ previewUrl: track.preview });
 
-if (!exists) {
-  await Song.create({
-    title: track.title,
-    artist: track.artist.name,
-    previewUrl: track.preview,
-    albumCover: track.album.cover_medium,
-    difficulty: 1,
-  });
+        if (!exists) {
+          await Song.create({
+            title: track.title,
+            artist: track.artist.name,
+            previewUrl: track.preview,
+            albumCover: track.album.cover_medium,
+            difficulty: 1, // Por defecto dificultad 1
+          });
           addedCount++;
         } else {
           skippedCount++;
