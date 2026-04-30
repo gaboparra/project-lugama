@@ -130,12 +130,14 @@ export const searchExternalSong = async (req, res) => {
     const response = await axios.get(`https://api.deezer.com/search?q=${query}`);
 
     // Mapeamos solo la data que nos sirve para nuestro modelo
-    const songs = response.data.data.map((song) => ({
-      title: song.title,
-      artist: song.artist.name,
-      previewUrl: song.preview,
-      albumCover: song.album.cover_medium,
-    }));
+const songs = response.data.data
+  .filter(song => song.preview && song.preview.includes("cdns-preview"))
+  .map((song) => ({
+    title: song.title,
+    artist: song.artist.name,
+    previewUrl: song.preview,
+    albumCover: song.album.cover_medium,
+  }));
 
     res.json(songs);
   } catch (error) {
@@ -187,16 +189,20 @@ export const seedDatabase = async (req, res) => {
       if (!tracks || tracks.length === 0) continue;
 
       for (const track of tracks) {
-        const exists = await Song.findOne({ previewUrl: track.preview });
+        if (!track.preview || !track.preview.includes("cdns-preview")) {
+  continue; // saltamos previews inválidos
+}
 
-        if (!exists) {
-          await Song.create({
-            title: track.title,
-            artist: track.artist.name,
-            previewUrl: track.preview,
-            albumCover: track.album.cover_medium,
-            difficulty: 1,
-          });
+const exists = await Song.findOne({ previewUrl: track.preview });
+
+if (!exists) {
+  await Song.create({
+    title: track.title,
+    artist: track.artist.name,
+    previewUrl: track.preview,
+    albumCover: track.album.cover_medium,
+    difficulty: 1,
+  });
           addedCount++;
         } else {
           skippedCount++;
