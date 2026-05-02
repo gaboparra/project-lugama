@@ -67,13 +67,25 @@ export const deleteSong = async (req, res) => {
 
 export const getRandomSong = async (req, res) => {
   try {
-    // Aggregate de Mongo para traer una muestra aleatoria de 1
     const count = await Song.countDocuments();
     const random = Math.floor(Math.random() * count);
     const song = await Song.findOne().skip(random);
 
     if (!song) {
       return res.status(404).json({ error: "No songs loaded" });
+    }
+
+    try {
+      const searchResponse = await axios.get(
+        `https://api.deezer.com/search?q=track:"${encodeURIComponent(song.title)}" artist:"${encodeURIComponent(song.artist)}"`,
+      );
+
+      const freshTrack = searchResponse.data.data[0];
+      if (freshTrack && freshTrack.preview) {
+        song.previewUrl = freshTrack.preview; // URL nueva
+      }
+    } catch (apiError) {
+      console.error("No se pudo refrescar la URL, enviando la guardada.");
     }
 
     res.json(song);
@@ -179,7 +191,7 @@ export const seedDatabase = async (req, res) => {
 
   try {
     for (const artistQuery of artists) {
-      // Usamos encodeURIComponent para manejar espacios y tildes (ej: "Charly García")
+      // encodeURIComponent para manejar espacios y tildes (ej: "Charly García")
       const response = await axios.get(
         `https://api.deezer.com/search?q=${encodeURIComponent(artistQuery)}&limit=50`,
       );
@@ -188,7 +200,6 @@ export const seedDatabase = async (req, res) => {
       if (!tracks || tracks.length === 0) continue;
 
       for (const track of tracks) {
-        // Validamos que exista una URL de audio, sin importar el subdominio
         if (!track.preview) continue;
 
         const exists = await Song.findOne({ previewUrl: track.preview });
