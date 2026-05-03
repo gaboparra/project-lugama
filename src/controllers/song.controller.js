@@ -100,33 +100,42 @@ export const validateAnswer = async (req, res) => {
     const userId = req.user.id;
 
     const song = await Song.findById(songId);
-
     const isCorrect = song.title.toLowerCase().trim() === answer.toLowerCase().trim();
 
     if (isCorrect) {
-      // Calculamos puntos: si es el primer intento (attempt=1) suma 10.
-      // Si es el segundo, suma 8, etc.
-      const pointsToSum = Math.max(10 - (attempt - 1) * 2, 2); // Mínimo 2 puntos por adivinar
+      // Nueva escala: Intento 1 = 6 pts, Intento 6 = 1 pt.
+      // Fórmula: 7 - intento (pero mínimo 1)
+      const pointsToSum = Math.max(7 - attempt, 1);
+      
+      // Si es el primer intento, sumamos una estrella
+      const updateData = { $inc: { points: pointsToSum } };
+      if (attempt === 1) {
+        updateData.$inc.stars = 1;
+      }
 
       const user = await User.findByIdAndUpdate(
         userId,
-        { $inc: { points: pointsToSum } },
-        { returnDocument: "after" },
-      );
+        updateData,
+        { returnDocument: "after" }
+      ).select("-password");
 
       return res.json({
         correct: true,
         pointsEarned: pointsToSum,
+        starEarned: attempt === 1,
         totalPoints: user.points,
+        totalStars: user.stars,
         fullData: song,
       });
     }
 
-    // Si falla, el Front se encarga de mostrar "Error, te quedan X intentos"
-    // y en la próxima llamada mandará attempt: 2
+    if (attempt >= 6) {
+      return res.json({ correct: false, message: "Perdiste", fullData: song });
+    }
+
     res.json({ correct: false, message: "Incorrect" });
   } catch (error) {
-    res.status(500).json({ error: "Error in validation" });
+    res.status(500).json({ error: "Error en validación" });
   }
 };
 

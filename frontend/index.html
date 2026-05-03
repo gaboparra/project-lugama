@@ -1,314 +1,55 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LGM — Adiviná la canción</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./css/index.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lugama - Adivina la Canción</title>
+    <link rel="stylesheet" href="./css/index.css">
 </head>
 <body>
-<div id="app">
- 
-  <!-- NAVBAR -->
-  <nav>
-    <div class="nav-logo" onclick="navigate('home')">
-      <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="9" cy="19" r="5" fill="#6C4EF6"/>
-        <rect x="13" y="3" width="3" height="14" rx="1.5" fill="#6C4EF6"/>
-        <rect x="18" y="1" width="3" height="10" rx="1.5" fill="#a58eff"/>
-        <rect x="23" y="4" width="3" height="8" rx="1.5" fill="#6C4EF6" opacity="0.6"/>
-      </svg>
-      <span class="nav-logo-text">L<span>G</span>M</span>
+
+    <!-- SECCIÓN DE AUTENTICACIÓN -->
+    <div id="auth-section">
+        <h1 id="auth-title">Login Lugama</h1>
+        <input type="text" id="reg-username" placeholder="Nombre de usuario" style="display:none;">
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Contraseña">
+        <button id="btn-main" onclick="handleLogin()">Entrar</button>
+        <p id="toggle-text">¿No tenés cuenta? <a href="#" onclick="showRegister()">Registrate acá</a></p>
     </div>
-    <div class="nav-right" id="nav-right">
-      <button class="btn btn-ghost btn-sm" onclick="navigate('login')">Iniciar sesión</button>
-      <button class="btn btn-primary btn-sm" onclick="navigate('register')">Registrarse</button>
-    </div>
-  </nav>
- 
-  <!-- ═══════════════ HOME ═══════════════ -->
-  <div class="view active" id="view-home">
-    <div class="home-hero">
-      <div class="home-badge">
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="6" fill="#6C4EF6"/></svg>
-        El juego de música más difícil
-      </div>
-      <h1 class="home-title">Escuchá.<br>Adiviná.<span class="hl"> Ganate</span><br>los puntos.</h1>
-      <p class="home-desc">30 segundos de preview. Seis intentos. Una sola canción. ¿Podés adivinar?</p>
-      <div class="home-btns">
-        <button class="btn btn-primary btn-lg" onclick="startGame()">Jugar ahora</button>
-        <button class="btn btn-ghost btn-lg" onclick="navigate('ranking')">Ver ranking</button>
-      </div>
- 
-      <div class="home-stats" id="home-stats" style="display:none">
-        <div class="stat-item">
-          <div class="stat-value" id="stat-songs">—</div>
-          <div class="stat-label">Canciones</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value" id="stat-pts">—</div>
-          <div class="stat-label">Mis puntos</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value" id="stat-pos">—</div>
-          <div class="stat-label">Posición</div>
-        </div>
-      </div>
-    </div>
-  </div>
- 
-  <!-- ═══════════════ LOGIN ═══════════════ -->
-  <div class="view" id="view-login">
-    <div class="form-page">
-      <div class="form-card">
-        <div class="form-title">Bienvenido</div>
-        <div class="form-subtitle">Ingresá a tu cuenta para competir por el top ranking.</div>
-        <div class="form-error" id="login-error"></div>
-        <div class="form-group">
-          <label class="form-label">Email</label>
-          <input class="form-input" type="email" id="login-email" placeholder="vos@ejemplo.com" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Contraseña</label>
-          <input class="form-input" type="password" id="login-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" />
-        </div>
-        <button class="btn btn-primary btn-full" style="margin-top:8px" onclick="doLogin()" id="login-btn">Ingresar</button>
-        <div class="form-footer">¿No tenés cuenta? <a onclick="navigate('register')">Registrate acá</a></div>
-      </div>
-    </div>
-  </div>
- 
-  <!-- ═══════════════ REGISTER ═══════════════ -->
-  <div class="view" id="view-register">
-    <div class="form-page">
-      <div class="form-card">
-        <div class="form-title">Crear cuenta</div>
-        <div class="form-subtitle">Unite y empezá a acumular puntos.</div>
-        <div class="form-error" id="register-error"></div>
-        <div class="form-group">
-          <label class="form-label">Usuario</label>
-          <input class="form-input" type="text" id="reg-username" placeholder="tucoolnick" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Email</label>
-          <input class="form-input" type="email" id="reg-email" placeholder="vos@ejemplo.com" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Contraseña</label>
-          <input class="form-input" type="password" id="reg-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doRegister()" />
-        </div>
-        <button class="btn btn-primary btn-full" style="margin-top:8px" onclick="doRegister()" id="register-btn">Crear cuenta</button>
-        <div class="form-footer">¿Ya tenés cuenta? <a onclick="navigate('login')">Iniciá sesión</a></div>
-      </div>
-    </div>
-  </div>
- 
-  <!-- ═══════════════ GAME ═══════════════ -->
-  <div class="view" id="view-game">
-    <div class="game-wrap">
-      <div class="game-header">
-        <h2>¿Qué canción es?</h2>
-        <p>Escuchá el preview y adiviná el título</p>
-      </div>
- 
-      <!-- PLAYER CARD -->
-      <div class="player-card" id="player-card">
-        <div class="album-cover-wrap">
-          <img class="album-cover" id="album-img" src="" alt="Album cover" />
-          <div class="album-cover-overlay" id="album-overlay">
-            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="24" cy="24" r="24" fill="rgba(108,78,246,0.2)"/>
-              <path d="M19 14l16 10-16 10V14z" fill="#6C4EF6"/>
-            </svg>
-          </div>
-        </div>
- 
-        <div class="audio-player">
-          <button class="play-btn" onclick="togglePlay()" id="play-btn">
-            <svg viewBox="0 0 24 24" id="play-icon"><path d="M8 5v14l11-7z"/></svg>
-          </button>
-          <div class="progress-wrap">
-            <span class="time-text" id="time-current">0:00</span>
-            <div class="progress-bar" onclick="seekAudio(event)">
-              <div class="progress-fill" id="progress-fill"></div>
+
+    <!-- SECCIÓN DEL JUEGO -->
+    <div id="game-section" style="display:none;">
+        <div class="header-game">
+            <h1>Lugama Game</h1>
+            <div class="stats">
+                <p>Usuario: <span id="user-name"></span></p>
+                <p>Puntos: <span id="user-points">0</span></p>
+                <p>Estrellas: <span id="user-stars">0</span></p>
+                <p>Intento: <span id="attempt-count" class="time-badge">1 / 6</span></p>
             </div>
-            <span class="time-text" id="time-total">0:30</span>
-          </div>
         </div>
- 
-        <div class="attempts-row" id="attempts-row">
-          <div class="attempt-dot active"></div>
-          <div class="attempt-dot"></div>
-          <div class="attempt-dot"></div>
-          <div class="attempt-dot"></div>
-          <div class="attempt-dot"></div>
-          <div class="attempt-dot"></div>
+
+        <div id="player-container">
+            <p>Tiempo disponible: <span class="time-badge" id="current-limit-display">0.5s</span></p>
+            <audio id="song-preview" controls controlsList="nodownload"></audio>
+            <p id="feedback-message">¡Dale Play para empezar!</p>
         </div>
- 
-        <div style="font-size:13px;color:var(--text-muted);">Intento <span id="attempt-num">1</span> de 6</div>
-      </div>
- 
-      <!-- ANSWER FORM -->
-      <div class="answer-form" id="answer-form">
-        <div class="answer-input-wrap">
-          <input class="answer-input" type="text" id="answer-input" placeholder="Escribí el nombre de la canción..." onkeydown="if(event.key==='Enter')submitAnswer()" />
-          <button class="btn btn-primary" onclick="submitAnswer()" id="submit-btn">Enviar</button>
+
+        <div class="guess-area">
+            <input type="text" id="guess-input" list="songs-list" placeholder="¿Cómo se llama la canción?" oninput="handleSearch(this.value)">
+            <datalist id="songs-list"></datalist>
+            <button onclick="handleCheck()">Adivinar</button>
+            <button onclick="loadNewSong()" id="next-btn" style="margin-left: 10px;">Saltar / Siguiente</button>
         </div>
-        <div style="text-align:center">
-          <span class="skip-hint" onclick="skipSong()">Saltar canción →</span>
+
+        <div id="song-info" style="display:none; margin-top: 20px;">
+            <h3>La canción era:</h3>
+            <img id="album-cover" src="" alt="Album Cover" style="width: 200px; border-radius: 10px;">
+            <p id="song-details" style="font-weight: bold; font-size: 1.2rem;"></p>
         </div>
-      </div>
- 
-      <!-- RESULT -->
-      <div class="result-card" id="result-card" style="display:none">
-        <div class="result-icon" id="result-icon"></div>
-        <div class="result-title" id="result-title"></div>
-        <div class="result-subtitle" id="result-subtitle"></div>
- 
-        <div class="result-song-info" id="result-song-info">
-          <img class="result-cover" id="result-cover-img" src="" alt="" />
-          <div class="result-song-text">
-            <div class="song-title" id="result-song-title"></div>
-            <div class="song-artist" id="result-song-artist"></div>
-          </div>
-        </div>
- 
-        <div class="pts-earned" id="pts-earned" style="display:none"></div>
-        <div class="pts-earned-label" id="pts-earned-label" style="display:none"></div>
- 
-        <div style="display:flex;gap:10px;justify-content:center;margin-top:8px">
-          <button class="btn btn-primary" onclick="startGame()">Otra canción</button>
-          <button class="btn btn-ghost" onclick="navigate('ranking')">Ver ranking</button>
-        </div>
-      </div>
     </div>
-  </div>
- 
-  <!-- ═══════════════ RANKING ═══════════════ -->
-  <div class="view" id="view-ranking">
-    <div class="ranking-wrap">
-      <div class="section-title">Ranking global</div>
-      <div class="section-subtitle">Top 10 jugadores con más puntos</div>
-      <div class="ranking-list" id="ranking-list">
-        <div class="loading-overlay"><div class="spinner"></div> Cargando ranking...</div>
-      </div>
-      <div style="margin-top:24px;display:flex;gap:10px">
-        <button class="btn btn-primary" onclick="startGame()">Jugar ahora</button>
-        <button class="btn btn-ghost" onclick="navigate('home')">Volver</button>
-      </div>
-    </div>
-  </div>
- 
-  <!-- ═══════════════ PROFILE ═══════════════ -->
-  <div class="view" id="view-profile">
-    <div class="profile-wrap">
-      <div class="profile-header" id="profile-header">
-        <div class="profile-avatar-big" id="profile-avatar"></div>
-        <div class="profile-info">
-          <h2 id="profile-username"></h2>
-          <div class="profile-email" id="profile-email"></div>
-          <span class="profile-pts-badge" id="profile-pts"></span>
-        </div>
-      </div>
- 
-      <!-- Change username -->
-      <div class="profile-section">
-        <h3>Cambiar usuario</h3>
-        <div class="form-group">
-          <label class="form-label">Nuevo usuario</label>
-          <input class="form-input" type="text" id="new-username" placeholder="nuevo nick" />
-        </div>
-        <button class="btn btn-primary btn-sm" onclick="doUpdateProfile()">Guardar</button>
-      </div>
- 
-      <!-- Change password -->
-      <div class="profile-section">
-        <h3>Cambiar contraseña</h3>
-        <div class="form-group">
-          <label class="form-label">Contraseña actual</label>
-          <input class="form-input" type="password" id="cur-password" placeholder="••••••••" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Nueva contraseña</label>
-          <input class="form-input" type="password" id="new-password" placeholder="••••••••" />
-        </div>
-        <button class="btn btn-primary btn-sm" onclick="doChangePassword()">Actualizar</button>
-      </div>
- 
-      <!-- Danger zone -->
-      <div class="profile-section" style="border-color:rgba(240,92,92,0.2)">
-        <h3 style="color:var(--danger)">Zona de peligro</h3>
-        <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px">Esta acción es irreversible. Tu cuenta y puntos serán eliminados permanentemente.</p>
-        <button class="btn btn-danger btn-sm" onclick="openDeleteModal()">Eliminar mi cuenta</button>
-      </div>
-    </div>
-  </div>
- 
-  <!-- ═══════════════ ADMIN ═══════════════ -->
-  <div class="view" id="view-admin">
-    <div class="admin-wrap">
-      <div class="section-title">Panel Admin</div>
-      <div class="section-subtitle">Gestión de canciones y base de datos</div>
- 
-      <div class="admin-tabs">
-        <button class="admin-tab active" onclick="setAdminTab('search')">Buscar Deezer</button>
-        <button class="admin-tab" onclick="setAdminTab('db')">Base de datos</button>
-        <button class="admin-tab" onclick="setAdminTab('seed')">Seed</button>
-      </div>
- 
-      <!-- SEARCH EXTERNAL -->
-      <div class="admin-panel active" id="admin-search">
-        <div class="search-row">
-          <input class="form-input" type="text" id="deezer-query" placeholder="Buscar artista o canción en Deezer..." onkeydown="if(event.key==='Enter')searchDeezer()" style="flex:1"/>
-          <button class="btn btn-primary" onclick="searchDeezer()">Buscar</button>
-        </div>
-        <div class="songs-grid" id="deezer-results"></div>
-      </div>
- 
-      <!-- DB SONGS -->
-      <div class="admin-panel" id="admin-db">
-        <div class="search-row">
-          <input class="form-input" type="text" id="db-query" placeholder="Buscar en la base de datos..." oninput="searchDb()" style="flex:1"/>
-        </div>
-        <div class="songs-grid" id="db-results"></div>
-      </div>
- 
-      <!-- SEED -->
-      <div class="admin-panel" id="admin-seed">
-        <div class="profile-section" style="max-width:500px">
-          <h3>Seed de base de datos</h3>
-          <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.6">
-            Ejecuta el proceso de seed configurado en el backend. Agrega canciones de los artistas definidos en <code style="background:var(--bg3);padding:2px 6px;border-radius:4px;font-size:12px">song.controller.js</code>.
-          </p>
-          <button class="btn btn-primary" onclick="runSeed()" id="seed-btn">Ejecutar Seed</button>
-          <div id="seed-result" style="margin-top:16px;font-size:14px;color:var(--text-muted);display:none"></div>
-        </div>
-      </div>
-    </div>
-  </div>
- 
-</div><!-- /#app -->
- 
-<!-- TOAST -->
-<div id="toast"></div>
- 
-<!-- DELETE CONFIRM MODAL -->
-<div class="modal-backdrop" id="delete-modal">
-  <div class="modal-box">
-    <h3>¿Eliminar cuenta?</h3>
-    <p>Esta acción no se puede deshacer. Tus puntos y datos serán eliminados para siempre.</p>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeDeleteModal()">Cancelar</button>
-      <button class="btn btn-danger" onclick="doDeleteAccount()">Sí, eliminar</button>
-    </div>
-  </div>
-</div>
- 
-<audio id="audio-player"></audio>
- 
-<script src="./js/index.js"></script>
+
+    <script src="./js/index.js"></script>
 </body>
 </html>
