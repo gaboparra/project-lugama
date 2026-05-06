@@ -272,3 +272,12 @@ export const seedDatabase = async (req, res) => {
     res.status(500).json({ error: "Error in mass seeding", details: error.message });
   }
 };
+
+export const getExistingGenres = async (req, res) => {
+  try {
+    const genres = await Song.distinct("genre");
+    res.json(genres);
+  } catch (error) {
+    res.status(500).json({ error: "Error al obtener géneros" });
+  }
+};

@@ -9,6 +9,7 @@ import {
   searchExternalSong,
   searchSongsInDb,
   seedDatabase,
+  getExistingGenres,
 } from "../controllers/song.controller.js";
 import { protect } from "../middlewares/auth.middleware.js";
 import { isAdmin } from "../middlewares/role.middleware.js";
@@ -22,6 +23,7 @@ router.post("/validate", protect, validateAnswer);
 router.get("/search-external", protect, isAdmin, searchExternalSong);
 router.get("/search", searchSongsInDb);
 router.post("/seed", protect, isAdmin, seedDatabase);
+router.get("/genres", getExistingGenres);
 
 router.put("/update/:id", protect, isAdmin, updateSong);
 router.delete("/delete/:id", protect, isAdmin, deleteSong);
