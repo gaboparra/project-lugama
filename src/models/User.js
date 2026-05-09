@@ -8,6 +8,8 @@ const UserSchema = new mongoose.Schema(
       required: true,
       unique: true,
       trim: true,
+      minlength: [1, "El nombre debe tener al menos 1 carácter"],
+      maxlength: [30, "El nombre no puede exceder los 30 caracteres"],
     },
     email: {
       type: String,
@@ -23,9 +25,10 @@ const UserSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    stars: { 
-      type: Number, 
-      default: 0 }, 
+    stars: {
+      type: Number,
+      default: 0,
+    },
     role: {
       type: String,
       enum: ["user", "admin"],

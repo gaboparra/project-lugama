@@ -205,8 +205,8 @@ export const searchSongsInDb = async (req, res) => {
     })
       // 'locale: en' y 'strength: 1' para ignorar tildes y mayúsculas
       .collation({ locale: "en", strength: 1 })
-      .limit(50);
-
+      .limit(15);
+      
     res.json(songs);
   } catch (error) {
     res.status(500).json({ error: "Error en la búsqueda" });
@@ -214,6 +214,11 @@ export const searchSongsInDb = async (req, res) => {
 };
 
 export const seedDatabase = async (req, res) => {
+  // Definimos la función de escape aquí adentro
+  const escapeRegExp = (string) => {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  };
+
   const { artists, genre } = req.body;
 
   if (!artists || !Array.isArray(artists) || artists.length === 0) {
@@ -227,7 +232,7 @@ export const seedDatabase = async (req, res) => {
   try {
     for (const artistQuery of artists) {
       const response = await axios.get(
-        `https://api.deezer.com/search?q=${encodeURIComponent(artistQuery)}&limit=50`,
+        `https://api.deezer.com/search?q=artist:"${encodeURIComponent(artistQuery)}"&limit=50`
       );
 
       const tracks = response.data.data;
@@ -239,22 +244,38 @@ export const seedDatabase = async (req, res) => {
           continue;
         }
 
-        const exists = await Song.findOne({ deezerId: track.id });
+        // Filtro de artista exacto
+        if (track.artist.name.toLowerCase() !== artistQuery.toLowerCase()) {
+          continue; 
+        }
 
-        if (!exists) {
+        // Usamos la función que definimos arriba
+        const escapedTitle = escapeRegExp(track.title);
+
+        const isDuplicateTitle = await Song.findOne({
+          title: { $regex: `^${escapedTitle}$`, $options: "i" },
+          artist: track.artist.name
+        });
+
+        if (isDuplicateTitle) {
+          skippedCount++;
+          continue;
+        }
+
+        const existsById = await Song.findOne({ deezerId: track.id });
+
+        if (!existsById) {
           await Song.create({
             deezerId: track.id,
             title: track.title,
             artist: track.artist.name,
             previewUrl: track.preview,
-            albumCover: track.album.cover_medium,
+            albumCover: track.album && track.album.cover_medium ? track.album.cover_medium : "",
             difficulty: 1,
             genre: genre || "General",
           });
           addedCount++;
         } else {
-          exists.previewUrl = track.preview;
-          await exists.save();
           skippedCount++;
         }
       }
