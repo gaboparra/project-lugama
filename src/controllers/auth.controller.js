@@ -46,9 +46,20 @@ export const login = async (req, res) => {
         id: user._id,
         username: user.username,
         points: user.points,
+        stars: user.stars,
       },
     });
   } catch (error) {
     res.status(500).json({ error: "Login error" });
   }
+};
+
+export const getMe = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).select('-password');
+        if (!user) return res.status(404).json({ error: "Usuario no encontrado" });
+        res.json(user);
+    } catch (error) {
+        res.status(500).json({ error: "Server error" });
+    }
 };

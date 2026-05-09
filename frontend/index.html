@@ -1,55 +1,92 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lugama - Adivina la Canción</title>
-    <link rel="stylesheet" href="./css/index.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lugama - Adivina la Canción</title>
+  <link rel="icon" href="./assets/img/lugama_favicon2.png">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/index.css">
 </head>
 <body>
 
-    <!-- SECCIÓN DE AUTENTICACIÓN -->
-    <div id="auth-section">
-        <h1 id="auth-title">Login Lugama</h1>
-        <input type="text" id="reg-username" placeholder="Nombre de usuario" style="display:none;">
-        <input type="email" id="email" placeholder="Email">
-        <input type="password" id="password" placeholder="Contraseña">
-        <button id="btn-main" onclick="handleLogin()">Entrar</button>
-        <p id="toggle-text">¿No tenés cuenta? <a href="#" onclick="showRegister()">Registrate acá</a></p>
+  <div id="auth-section" class="auth-wrap" style="display:flex">
+    <div class="auth-card">
+      <img src="./assets/img/lgm-icon-removebg-preview.png" width="150">
+      <h1 id="auth-title">Login</h1>
+      <input type="text" id="reg-username" placeholder="Nombre de usuario" style="display:none">
+      <input type="email" id="email" placeholder="Email">
+      <input type="password" id="password" placeholder="Contraseña">
+      <button id="btn-main" onclick="handleLogin()">Entrar</button>
+      <p id="toggle-text">¿No tenés cuenta? <a href="#" onclick="showRegister()">Registrate acá</a></p>
     </div>
+  </div>
 
-    <!-- SECCIÓN DEL JUEGO -->
-    <div id="game-section" style="display:none;">
-        <div class="header-game">
-            <h1>Lugama Game</h1>
-            <div class="stats">
-                <p>Usuario: <span id="user-name"></span></p>
-                <p>Puntos: <span id="user-points">0</span></p>
-                <p>Estrellas: <span id="user-stars">0</span></p>
-                <p>Intento: <span id="attempt-count" class="time-badge">1 / 6</span></p>
-            </div>
+  <div id="game-section" style="display:none">
+    <div class="game-wrap">
+      <header>
+        <img src="./assets/img/lgm-icon-removebg-preview.png" width="115">
+        <button onclick="handleLogout()">Cerrar sesión</button>
+      </header>
+
+      <div class="stats">
+        <div class="stat"><span>Usuario</span><strong id="user-name">—</strong></div>
+        <div class="stat"><span>Puntos</span><strong id="user-points">0</strong></div>
+        <div class="stat"><span>Estrellas</span><strong id="user-stars">0</strong></div>
+        <div class="stat"><span>Intento</span><strong id="attempt-count">1 / 6</strong></div>
+      </div>
+
+      <div class="genre-row">
+        <label for="genre-select">Género:</label>
+        <select id="genre-select" onchange="changeGenre()">
+          <option value="">Todos (Azar)</option>
+        </select>
+      </div>
+
+      <div id="player-container">
+        <div class="dots" id="dots">
+          <div class="dot active"></div><div class="dot"></div><div class="dot"></div>
+          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
         </div>
 
-        <div id="player-container">
-            <p>Tiempo disponible: <span class="time-badge" id="current-limit-display">0.5s</span></p>
-            <audio id="song-preview" controls controlsList="nodownload"></audio>
-            <p id="feedback-message">¡Dale Play para empezar!</p>
+        <!-- REPRODUCTOR ESTILO SONGLES -->
+        <div class="songles-player">
+          <div class="songles-header">
+            <span id="current-limit-display" class="badge">0.5s</span>
+            <span class="songles-time-text" id="songles-time-text">0.0s</span>
+          </div>
+          <div class="songles-bar-wrap" id="songles-bar-wrap">
+            <!-- Segmentos generados desde JS -->
+          </div>
+          <button class="songles-play-btn" id="songles-play-btn" onclick="togglePlay()">
+            <svg id="play-icon" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,3 20,12 6,21"/></svg>
+            <svg id="pause-icon" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="5" y="3" width="4" height="18"/><rect x="15" y="3" width="4" height="18"/></svg>
+          </button>
         </div>
 
-        <div class="guess-area">
-            <input type="text" id="guess-input" list="songs-list" placeholder="¿Cómo se llama la canción?" oninput="handleSearch(this.value)">
-            <datalist id="songs-list"></datalist>
-            <button onclick="handleCheck()">Adivinar</button>
-            <button onclick="loadNewSong()" id="next-btn" style="margin-left: 10px;">Saltar / Siguiente</button>
-        </div>
+        <!-- Audio oculto, solo para reproducción -->
+        <audio id="song-preview" style="display:none" preload="auto"></audio>
 
-        <div id="song-info" style="display:none; margin-top: 20px;">
-            <h3>La canción era:</h3>
-            <img id="album-cover" src="" alt="Album Cover" style="width: 200px; border-radius: 10px;">
-            <p id="song-details" style="font-weight: bold; font-size: 1.2rem;"></p>
-        </div>
+        <p id="feedback-message">¡Dale Play para empezar!</p>
+      </div>
+
+      <div id="song-info" style="display:none">
+        <img id="album-cover" src="" alt="Portada">
+        <p id="song-details"></p>
+      </div>
+
+      <div class="guess-area">
+        <input type="text" id="guess-input" list="songs-list" placeholder="¿Qué canción es?" oninput="handleSearch(this.value)">
+        <datalist id="songs-list"></datalist>
+        <button onclick="handleCheck()">Adivinar</button>
+        <button onclick="handleSkip()" id="skip-btn" class="secondary">Skip</button>
+        <button onclick="loadNewSong()" id="next-btn" class="ghost">Saltar canción</button>
+      </div>
     </div>
+  </div>
 
-    <script src="./js/index.js"></script>
+  <footer class="site-footer">© Lugama. Todos los derechos reservados.</footer>
+
+  <script src="./js/index.js"></script>
 </body>
 </html>
