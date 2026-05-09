@@ -13,17 +13,17 @@ export const getRanking = async (req, res) => {
   }
 };
 
-export const getProfile = async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id).select("-password");
+// export const getProfile = async (req, res) => {
+//   try {
+//     const user = await User.findById(req.user.id).select("-password");
 
-    if (!user) return res.status(404).json({ error: "User not found" });
+//     if (!user) return res.status(404).json({ error: "User not found" });
 
-    res.json(user);
-  } catch (error) {
-    res.status(500).json({ error: "Error getting profile" });
-  }
-};
+//     res.json(user);
+//   } catch (error) {
+//     res.status(500).json({ error: "Error getting profile" });
+//   }
+// };
 
 export const updateProfile = async (req, res) => {
   try {
