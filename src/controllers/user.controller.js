@@ -2,7 +2,6 @@ import User from "../models/User.js";
 
 export const getRanking = async (req, res) => {
   try {
-    // Traemos los mejores 10, ordenados por puntos descendente (-1)
     const topUsers = await User.find()
       .select("username points")
       .sort({ points: -1 })
@@ -81,8 +80,7 @@ export const deleteUser = async (req, res) => {
     const userId = req.user.id;
 
     const deletedUser = await User.findByIdAndDelete(userId);
-    if (!deletedUser)
-      return res.status(404).json({ error: "User not found" });
+    if (!deletedUser) return res.status(404).json({ error: "User not found" });
 
     res.json({ message: "Account deleted successfully" });
   } catch (error) {

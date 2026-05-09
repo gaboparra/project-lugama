@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="./css/index.css">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 
 <body>
@@ -21,6 +22,15 @@
       <input type="email" id="email" placeholder="Email">
       <input type="password" id="password" placeholder="Contraseña">
       <button id="btn-main" onclick="handleLogin()">Entrar</button>
+
+      <!-- BOTÓN DE GOOGLE -->
+      <div id="google-btn-container" style="margin-top: 15px; display: flex; justify-content: center;">
+        <div id="g_id_onload" data-client_id="766669482921-06i6pn5nn4ig0f3ba6djp6l7q63aahur.apps.googleusercontent.com"
+          data-callback="handleGoogleLogin">
+        </div>
+        <div class="g_id_signin" data-type="standard" data-theme="filled_black"></div>
+      </div>
+
       <p id="toggle-text">¿No tenés cuenta? <a href="#" onclick="showRegister()">Registrate acá</a></p>
     </div>
   </div>
@@ -66,7 +76,8 @@
                 <div class="instruction-item">
                   <span class="instruction-icon">⏭️</span>
                   <p>
-                    Si no la sabés, podés usar <strong>Skip</strong> para saltar el intento y escuchar un poco más de la canción.
+                    Si no la sabés, podés usar <strong>Skip</strong> para saltar el intento y escuchar un poco más de la
+                    canción.
                   </p>
                 </div>
 
@@ -87,7 +98,8 @@
                 <div class="instruction-item">
                   <span class="instruction-icon">⭐</span>
                   <p>
-                    Cuanto antes adivines, más puntos conseguís. Y si adivinas en el primer intento te llevas una Estrella⭐.
+                    Cuanto antes adivines, más puntos conseguís. Y si adivinas en el primer intento te llevas una
+                    Estrella⭐.
                   </p>
                 </div>
 
@@ -168,7 +180,12 @@
 
   <footer class="site-footer">© Lugama. Todos los derechos reservados.</footer>
 
+  <script src="./js/auth.js"></script>
   <script src="./js/index.js"></script>
+  <script src="./js/genre.js"></script>
+  <script src="./js/player.js"></script>
+  <script src="./js/game.js"></script>
+  <script src="./js/instructions.js"></script>
 </body>
 
 </html>

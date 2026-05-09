@@ -1,6 +1,7 @@
 import axios from "axios";
 import Song from "../models/Song.js";
 import User from "../models/User.js";
+import { normalizeText } from "../utils/normalizeSong.js";
 
 export const addSong = async (req, res) => {
   try {
@@ -77,7 +78,7 @@ export const getRandomSong = async (req, res) => {
 
     const count = await Song.countDocuments(filter);
     if (count === 0)
-      return res.status(404).json({ error: "No hay canciones cargadas para este género" });
+      return res.status(404).json({ error: "There are no loaded songs for this genre" });
 
     const random = Math.floor(Math.random() * count);
     const song = await Song.findOne(filter).skip(random);
@@ -91,7 +92,7 @@ export const getRandomSong = async (req, res) => {
         song.previewUrl = freshTrack.preview;
       }
     } catch (e) {
-      console.log("URL de fallback usada.");
+      console.log("used fallback URL.");
     }
 
     res.json(song);
@@ -106,38 +107,31 @@ export const validateAnswer = async (req, res) => {
     const userId = req.user.id;
 
     const song = await Song.findById(songId);
-    if (!song) return res.status(404).json({ error: "Canción no encontrada" });
 
-    const normalize = (text) => {
-      return (text.toLowerCase()
-          // Elimina contenido entre paréntesis o corchetes (ej: "Song (Remastered)" = "Song")
-          .replace(/\(.*\)|\[.*\]/g, "")
-          // Toma solo lo que está antes de un guion (ej: "Song - Live" = "Song")
-          .split("-")[0]
-          // Elimina tildes para que "fuería" y "fueria" coincidan
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "")
-          .trim()
-      );
-    };
+    if (!song) {
+      return res.status(404).json({
+        error: "Song not found",
+      });
+    }
 
-    const cleanDbTitle = normalize(song.title);
-    const cleanUserAnswer = normalize(answer);
+    const cleanDbTitle = normalizeText(song.title);
+    const cleanUserAnswer = normalizeText(answer);
 
     const isCorrect = cleanDbTitle === cleanUserAnswer;
 
     if (isCorrect) {
-      // Intento 1 = 6 pts, Intento 6 = 1 pt.
       const pointsToSum = Math.max(7 - attempt, 1);
 
-      const updateData = { $inc: { points: pointsToSum } };
-      // Si es el primer intento, sumamos una estrella
+      const updateData = {
+        $inc: { points: pointsToSum },
+      };
+
       if (attempt === 1) {
         updateData.$inc.stars = 1;
       }
 
       const user = await User.findByIdAndUpdate(userId, updateData, {
-        returnDocument: "after",
+        new: true,
       }).select("-password");
 
       return res.json({
@@ -153,14 +147,19 @@ export const validateAnswer = async (req, res) => {
     if (attempt >= 6) {
       return res.json({
         correct: false,
-        message: "Perdiste, se agotaron los intentos",
+        message: "You lost, attempts exhausted",
         fullData: song,
       });
     }
 
-    res.json({ correct: false, message: "Incorrecto, intenta de nuevo" });
+    res.json({
+      correct: false,
+      message: "Wrong answer",
+    });
   } catch (error) {
-    res.status(500).json({ error: "Error en la validación" });
+    res.status(500).json({
+      error: "Validation error",
+    });
   }
 };
 
@@ -176,7 +175,6 @@ export const searchExternalSong = async (req, res) => {
       `https://api.deezer.com/search?q=${query}`,
     );
 
-    // Mapeamos solo la data que nos sirve para nuestro modelo
     const songs = response.data.data
       .filter((song) => song.preview && song.preview.includes("cdns-preview"))
       .map((song) => ({
@@ -206,23 +204,22 @@ export const searchSongsInDb = async (req, res) => {
       // 'locale: en' y 'strength: 1' para ignorar tildes y mayúsculas
       .collation({ locale: "en", strength: 1 })
       .limit(15);
-      
+
     res.json(songs);
   } catch (error) {
-    res.status(500).json({ error: "Error en la búsqueda" });
+    res.status(500).json({ error: "Search error" });
   }
 };
 
 export const seedDatabase = async (req, res) => {
-  // Definimos la función de escape aquí adentro
   const escapeRegExp = (string) => {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   };
 
   const { artists, genre } = req.body;
 
   if (!artists || !Array.isArray(artists) || artists.length === 0) {
-    return res.status(400).json({ error: "Envía un array de artistas y un género." });
+    return res.status(400).json({ error: "You must send an array of artists and a genre" });
   }
 
   let addedCount = 0;
@@ -232,7 +229,7 @@ export const seedDatabase = async (req, res) => {
   try {
     for (const artistQuery of artists) {
       const response = await axios.get(
-        `https://api.deezer.com/search?q=artist:"${encodeURIComponent(artistQuery)}"&limit=50`
+        `https://api.deezer.com/search?q=artist:"${encodeURIComponent(artistQuery)}"&limit=50`,
       );
 
       const tracks = response.data.data;
@@ -244,17 +241,15 @@ export const seedDatabase = async (req, res) => {
           continue;
         }
 
-        // Filtro de artista exacto
         if (track.artist.name.toLowerCase() !== artistQuery.toLowerCase()) {
-          continue; 
+          continue;
         }
 
-        // Usamos la función que definimos arriba
         const escapedTitle = escapeRegExp(track.title);
 
         const isDuplicateTitle = await Song.findOne({
           title: { $regex: `^${escapedTitle}$`, $options: "i" },
-          artist: track.artist.name
+          artist: track.artist.name,
         });
 
         if (isDuplicateTitle) {
@@ -270,7 +265,9 @@ export const seedDatabase = async (req, res) => {
             title: track.title,
             artist: track.artist.name,
             previewUrl: track.preview,
-            albumCover: track.album && track.album.cover_medium ? track.album.cover_medium : "",
+            albumCover: track.album && track.album.cover_medium
+                ? track.album.cover_medium
+                : "",
             difficulty: 1,
             genre: genre || "General",
           });
@@ -299,6 +296,6 @@ export const getExistingGenres = async (req, res) => {
     const genres = await Song.distinct("genre");
     res.json(genres);
   } catch (error) {
-    res.status(500).json({ error: "Error al obtener géneros" });
+    res.status(500).json({ error: "Error fetching genres" });
   }
 };
