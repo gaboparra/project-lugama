@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LUGAMA - Say No More</title>
   <link rel="icon" href="./assets/img/icon-test-1-removebg-preview.png">
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="./css/index.css">
 </head>
+
 <body>
 
   <div id="auth-section" class="auth-wrap" style="display:flex">
@@ -26,7 +29,75 @@
     <div class="game-wrap">
       <header>
         <img src="./assets/img/lgm-icon-removebg-preview.png" width="115">
-        <button onclick="handleLogout()">Cerrar sesión</button>
+
+        <div class="nav-actions">
+
+          <!-- BOTÓN INSTRUCCIONES -->
+          <button class="help-btn" onclick="toggleInstructions()">
+            ?
+            <span>Instrucciones</span>
+          </button>
+
+          <!-- MODAL -->
+          <div id="instructions-modal" class="instructions-modal">
+            <div class="instructions-card">
+              <div class="instructions-header">
+                <h3>¿Cómo se juega?</h3>
+                <button class="close-help" onclick="toggleInstructions()">✕</button>
+              </div>
+
+              <div class="instructions-content">
+
+                <div class="instruction-item">
+                  <span class="instruction-icon">🎵</span>
+                  <p>
+                    Vas a escuchar fragmentos de una canción y tenés que adivinar cuál es.
+                  </p>
+                </div>
+
+                <div class="instruction-item">
+                  <span class="instruction-icon">⏱️</span>
+                  <p>
+                    Tenés <strong>6 intentos</strong>. En cada intento escuchás más segundos:
+                    <strong>0.5s → 1s → 2s → 5s → 10s → 30s</strong>.
+                  </p>
+                </div>
+
+                <div class="instruction-item">
+                  <span class="instruction-icon">⏭️</span>
+                  <p>
+                    Si no la sabés, podés usar <strong>Skip</strong> para saltar el intento y escuchar un poco más de la canción.
+                  </p>
+                </div>
+
+                <div class="instruction-item">
+                  <span class="instruction-icon">🔀</span>
+                  <p>
+                    También podés usar <strong>Saltar canción</strong> para recibir una canción nueva.
+                  </p>
+                </div>
+
+                <div class="instruction-item">
+                  <span class="instruction-icon">🎼</span>
+                  <p>
+                    Elegí un <strong>género musical</strong> para aumentar tus chances de reconocer canciones.
+                  </p>
+                </div>
+
+                <div class="instruction-item">
+                  <span class="instruction-icon">⭐</span>
+                  <p>
+                    Cuanto antes adivines, más puntos conseguís. Y si adivinas en el primer intento te llevas una Estrella⭐.
+                  </p>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <button onclick="handleLogout()">Cerrar sesión</button>
+
+        </div>
       </header>
 
       <div class="stats">
@@ -45,8 +116,12 @@
 
       <div id="player-container">
         <div class="dots" id="dots">
-          <div class="dot active"></div><div class="dot"></div><div class="dot"></div>
-          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+          <div class="dot active"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
         </div>
 
         <!-- REPRODUCTOR ESTILO SONGLES -->
@@ -59,8 +134,13 @@
             <!-- Segmentos generados desde JS -->
           </div>
           <button class="songles-play-btn" id="songles-play-btn" onclick="togglePlay()">
-            <svg id="play-icon" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,3 20,12 6,21"/></svg>
-            <svg id="pause-icon" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="5" y="3" width="4" height="18"/><rect x="15" y="3" width="4" height="18"/></svg>
+            <svg id="play-icon" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="6,3 20,12 6,21" />
+            </svg>
+            <svg id="pause-icon" viewBox="0 0 24 24" fill="currentColor" style="display:none">
+              <rect x="5" y="3" width="4" height="18" />
+              <rect x="15" y="3" width="4" height="18" />
+            </svg>
           </button>
         </div>
 
@@ -76,7 +156,8 @@
       </div>
 
       <div class="guess-area">
-        <input type="text" id="guess-input" list="songs-list" placeholder="¿Qué canción es?" oninput="handleSearch(this.value)">
+        <input type="text" id="guess-input" list="songs-list" placeholder="¿Qué canción es?"
+          oninput="handleSearch(this.value)">
         <datalist id="songs-list"></datalist>
         <button onclick="handleCheck()">Adivinar</button>
         <button onclick="handleSkip()" id="skip-btn" class="secondary">Skip</button>
@@ -89,4 +170,5 @@
 
   <script src="./js/index.js"></script>
 </body>
+
 </html>
