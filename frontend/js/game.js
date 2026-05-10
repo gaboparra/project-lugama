@@ -4,15 +4,11 @@ async function loadNewSong() {
   document.getElementById("guess-input").disabled = false;
 
   try {
-    let url = `${API_URL}/songs/random`;
-
-    if (selectedGenre) {
-      url += `?genre=${selectedGenre}`;
-    }
-
-    const res = await fetch(url, {
-      headers: getHeaders(),
-    });
+    const res = await fetch(`/api/songs/random${selectedGenre ? `?genre=${selectedGenre}` : ""}`,
+      {
+        headers: getHeaders(),
+      },
+    );
 
     const song = await res.json();
 
@@ -49,7 +45,7 @@ async function handleCheck() {
   const answer = document.getElementById("guess-input").value;
   const msg = document.getElementById("feedback-message");
   try {
-    const res = await fetch(`${API_URL}/songs/validate`, {
+    const res = await fetch("/api/songs/validate", {
       method: "POST",
       headers: getHeaders(),
       body: JSON.stringify({
@@ -63,10 +59,10 @@ async function handleCheck() {
 
     if (data.correct) {
       const star = data.starEarned ? " ⭐ ¡ESTRELLA!" : "";
-      msg.innerText  = `¡Correcto! +${data.pointsEarned} pts.${star}`;
+      msg.innerText = `¡Correcto! +${data.pointsEarned} pts.${star}`;
       msg.style.color = "green";
-      document.getElementById('user-points').innerText = data.totalPoints;
-      document.getElementById('user-stars').innerText  = data.totalStars;
+      document.getElementById("user-points").innerText = data.totalPoints;
+      document.getElementById("user-stars").innerText = data.totalStars;
       showFinalData(data.fullData);
       return;
     }
@@ -89,21 +85,21 @@ async function handleCheck() {
 }
 
 function handleSkip() {
-      if (document.getElementById('guess-input').disabled) return;
-    if (currentAttempt >= MAX_ATTEMPTS) {
-        handleCheck();
-    } else {
-        currentAttempt++;
-        refreshUI();
-        updateAudioLimit();
-        document.getElementById('guess-input').value = "";
-    }
+  if (document.getElementById("guess-input").disabled) return;
+  if (currentAttempt >= MAX_ATTEMPTS) {
+    handleCheck();
+  } else {
+    currentAttempt++;
+    refreshUI();
+    updateAudioLimit();
+    document.getElementById("guess-input").value = "";
+  }
 }
 
 async function handleSearch(query) {
   if (query.length < 2) return;
 
-  const res = await fetch(`${API_URL}/songs/search?q=${query}`, {
+  const res = await fetch(`/api/songs/search?q=${query}`, {
     headers: getHeaders(),
   });
 
@@ -128,7 +124,8 @@ function showFinalData(songData) {
   document.getElementById("guess-input").disabled = true;
   document.getElementById("song-info").style.display = "flex";
   document.getElementById("album-cover").src = songData.albumCover;
-  document.getElementById("song-details").innerText = `${songData.title} - ${songData.artist}`;
-   if (animationFrameId) cancelAnimationFrame(animationFrameId);
-    document.getElementById('song-preview').onplay = null;
+  document.getElementById("song-details").innerText =
+    `${songData.title} - ${songData.artist}`;
+  if (animationFrameId) cancelAnimationFrame(animationFrameId);
+  document.getElementById("song-preview").onplay = null;
 }

@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:3000/api";
+// const API_URL = "http://localhost:3000/api";
 
 const MAX_ATTEMPTS = 6;
 
@@ -12,16 +12,19 @@ const TIME_LIMITS = {
 };
 
 const fondos = [
-    "../assets/backgrounds/fondo-coraje.png",
-    "../assets/backgrounds/fondo-gengar.png",
-    "../assets/backgrounds/gomu-gomu-expanded.png",
-    "../assets/backgrounds/purple-city-expanded.png",
-    "../assets/backgrounds/gengars-fondo.png"
-    // agregás todos los que tengas
+  "../assets/backgrounds/fondo-coraje.png",
+  "../assets/backgrounds/fondo-gengar.png",
+  "../assets/backgrounds/gomu-gomu-expanded.png",
+  "../assets/backgrounds/purple-city-expanded.png",
+  "../assets/backgrounds/gengars-fondo.png",
+  // agregás todos los que tengas
 ];
 
 const fondoAleatorio = fondos[Math.floor(Math.random() * fondos.length)];
-document.documentElement.style.setProperty("--fondo-bg", `url('${fondoAleatorio}')`);
+document.documentElement.style.setProperty(
+  "--fondo-bg",
+  `url('${fondoAleatorio}')`,
+);
 
 let currentSongId = null;
 let currentAttempt = 1;

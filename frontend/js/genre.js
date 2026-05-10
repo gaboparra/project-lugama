@@ -1,6 +1,6 @@
 async function fetchGenres() {
   try {
-    const res = await fetch(`${API_URL}/songs/genres`, {
+    const res = await fetch("/api/songs/genres", {
       headers: getHeaders(),
     });
 
