@@ -1,47 +1,83 @@
-// Variables globales
 window.isRegisterMode = false;
 window.API_URL = "http://localhost:3000/api";
 
-// Configuración de Headers
-window.getHeaders = function() {
-    return {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-    };
-};
+window.getHeaders = () => ({
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${localStorage.getItem("token")}`,
+});
 
-// --- CALLBACK DE GOOGLE ---
-window.handleGoogleLogin = async function(response) {
-    // console.log("Token recibido de Google");
+// ── ERROR INLINE ──────────────────────────────────────────────────────────────
+function showAuthError(msg) {
+    const el = document.getElementById("auth-error");
+    el.textContent = msg;
+    el.style.display = "block";
+}
+
+function clearAuthError() {
+    const el = document.getElementById("auth-error");
+    el.textContent = "";
+    el.style.display = "none";
+}
+
+// ── GOOGLE ────────────────────────────────────────────────────────────────────
+window.handleGoogleLogin = async function (response) {
+    clearAuthError();
     try {
-        const res = await fetch(`${window.API_URL}/auth/google`, {
+        const res  = await fetch(`${window.API_URL}/auth/google`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ idToken: response.credential }),
         });
-
         const data = await res.json();
-
         if (res.ok && data.token) {
-            window.completeAuth(data);
+            await window.completeAuth(data);
         } else {
-            alert("Error en validación con el servidor: " + (data.error || "Token inválido"));
+            showAuthError(data.error || "Error al iniciar sesión con Google");
         }
-    } catch (error) {
-        console.error("Error en handleGoogleLogin:", error);
-        alert("Error de conexión con el backend");
+    } catch (err) {
+        showAuthError("Error de conexión con el servidor");
     }
 };
 
-// --- LÓGICA DE UI (LOGIN/REGISTRO) ---
-window.showRegister = function() {
-    window.isRegisterMode = !window.isRegisterMode;
+// ── COMPLETAR AUTH ────────────────────────────────────────────────────────────
+window.completeAuth = async function (data) {
+    localStorage.setItem("token", data.token);
+    try {
+        const res = await fetch(`${window.API_URL}/auth/me`, {
+            headers: window.getHeaders(),
+        });
+        if (!res.ok) {
+            localStorage.removeItem("token");
+            showAuthError("No se pudo obtener el perfil");
+            return;
+        }
+        const user = await res.json();
 
-    const title = document.getElementById("auth-title");
-    const userField = document.getElementById("reg-username");
-    const btn = document.getElementById("btn-main");
+        document.getElementById("auth-section").style.display = "none";
+        document.getElementById("game-section").style.display = "block";
+        document.getElementById("user-name").innerText   = user.username;
+        document.getElementById("user-points").innerText = user.points ?? 0;
+        document.getElementById("user-stars").innerText  = user.stars  ?? 0;
+
+        if (typeof fetchGenres === "function") {
+            await fetchGenres();
+            if (typeof loadNewSong === "function") loadNewSong();
+        }
+    } catch (err) {
+        showAuthError("Error al obtener el perfil");
+    }
+};
+
+// ── UI LOGIN / REGISTRO ───────────────────────────────────────────────────────
+window.showRegister = function () {
+    window.isRegisterMode = !window.isRegisterMode;
+    clearAuthError();
+
+    const title      = document.getElementById("auth-title");
+    const userField  = document.getElementById("reg-username");
+    const btn        = document.getElementById("btn-main");
     const toggleLink = document.getElementById("toggle-text");
-    const googleBtn = document.getElementById("google-btn-container");
+    const googleBtn  = document.getElementById("google-btn-container");
 
     if (window.isRegisterMode) {
         title.innerText = "Registro";
@@ -60,73 +96,84 @@ window.showRegister = function() {
     }
 };
 
-// --- COMPLETAR SESIÓN ---
-window.completeAuth = function(data) {
-    localStorage.setItem("token", data.token);
-    
-    document.getElementById("auth-section").style.display = "none";
-    document.getElementById("game-section").style.display = "block";
-
-    document.getElementById("user-name").innerText = data.user.username;
-    document.getElementById("user-points").innerText = data.user.points || 0;
-    document.getElementById("user-stars").innerText = data.user.stars || 0;
-
-    // Ejecutar carga de géneros y canción si las funciones existen
-    if (typeof fetchGenres === "function") {
-        fetchGenres().then(() => {
-            if (typeof loadNewSong === "function") loadNewSong();
-        });
-    }
-};
-
-// --- MANEJADORES DE FORMULARIO ---
-window.handleLogin = async function() {
-    const email = document.getElementById("email").value;
+// ── HANDLERS ──────────────────────────────────────────────────────────────────
+window.handleLogin = async function () {
+    clearAuthError();
+    const email    = document.getElementById("email").value;
     const password = document.getElementById("password").value;
 
     try {
-        const res = await fetch(`${window.API_URL}/auth/login`, {
+        const res  = await fetch(`${window.API_URL}/auth/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password }),
         });
-
         const data = await res.json();
-        if (res.ok && data.token) {
-            window.completeAuth(data);
-        } else {
-            alert(data.error || "Credenciales incorrectas");
+
+        if (!res.ok) {
+            showAuthError(data.error === "Invalid credentials"
+                ? "Email o contraseña incorrectos"
+                : data.error || "Error al iniciar sesión"
+            );
+            return;
         }
+
+        await window.completeAuth(data);
     } catch (err) {
-        alert("Error al conectar con el servidor");
+        showAuthError("Error al conectar con el servidor");
     }
 };
 
-window.handleRegister = async function() {
-    const username = document.getElementById("reg-username").value;
-    const email = document.getElementById("email").value;
+window.handleRegister = async function () {
+    clearAuthError();
+ 
+    const username = document.getElementById("reg-username").value.trim();
+    const email    = document.getElementById("email").value.trim();
     const password = document.getElementById("password").value;
-
+ 
+    // ── VALIDACIONES CLIENTE ──────────────────────────────────────────────────
+    if (!username || !email || !password) {
+        showAuthError("Completá todos los campos");
+        return;
+    }
+    if (username.length < 1 || username.length > 30) {
+        showAuthError("El usuario tiene que tener entre 1 y 30 caracteres");
+        return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showAuthError("El email no tiene un formato válido");
+        return;
+    }
+    if (password.length < 6) {
+        showAuthError("La contraseña tiene que tener al menos 6 caracteres");
+        return;
+    }
+ 
+    // ── FETCH ─────────────────────────────────────────────────────────────────
     try {
-        const res = await fetch(`${window.API_URL}/auth/register`, {
+        const res  = await fetch(`${window.API_URL}/auth/register`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username, email, password }),
         });
-
         const data = await res.json();
-        if (res.ok) {
-            alert("¡Cuenta creada!");
-            window.completeAuth(data);
-        } else {
-            alert(data.error || "Error al registrar");
+ 
+        if (!res.ok) {
+            // el back devuelve "User or email already in use" si ya existen
+            showAuthError(data.error === "User or email already in use"
+                ? "El usuario o email ya están en uso"
+                : data.error || "Error al registrar"
+            );
+            return;
         }
+ 
+        await window.completeAuth(data);
     } catch (err) {
-        alert("Error de conexión");
+        showAuthError("Error de conexión");
     }
 };
 
-window.checkSession = async function() {
+window.checkSession = async function () {
     const token = localStorage.getItem("token");
     if (!token) return;
 
@@ -134,19 +181,16 @@ window.checkSession = async function() {
         const res = await fetch(`${window.API_URL}/auth/me`, {
             headers: window.getHeaders(),
         });
+        if (!res.ok) { localStorage.removeItem("token"); return; }
 
-        if (res.ok) {
-            const user = await res.json();
-            window.completeAuth({ token, user });
-        } else {
-            localStorage.removeItem("token");
-        }
+        const user = await res.json();
+        await window.completeAuth({ token, user });
     } catch (err) {
         localStorage.removeItem("token");
     }
 };
 
-window.handleLogout = function() {
+window.handleLogout = function () {
     localStorage.removeItem("token");
     location.reload();
 };

@@ -6,8 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LUGAMA - Say No More</title>
   <link rel="icon" href="./assets/img/icon-test-1-removebg-preview.png">
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap"
-    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/index.css">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
@@ -21,11 +20,15 @@
       <input type="text" id="reg-username" placeholder="Nombre de usuario" style="display:none">
       <input type="email" id="email" placeholder="Email">
       <input type="password" id="password" placeholder="Contraseña">
+
+      <!-- MENSAJE DE ERROR -->
+      <p id="auth-error" class="auth-error" style="display:none"></p>
+
       <button id="btn-main" onclick="handleLogin()">Entrar</button>
 
-      <!-- BOTÓN DE GOOGLE -->
-      <div id="google-btn-container" style="margin-top: 15px; display: flex; justify-content: center;">
-        <div id="g_id_onload" data-client_id="766669482921-06i6pn5nn4ig0f3ba6djp6l7q63aahur.apps.googleusercontent.com"
+      <div id="google-btn-container" style="margin-top:15px; display:flex; justify-content:center;">
+        <div id="g_id_onload"
+          data-client_id="766669482921-06i6pn5nn4ig0f3ba6djp6l7q63aahur.apps.googleusercontent.com"
           data-callback="handleGoogleLogin">
         </div>
         <div class="g_id_signin" data-type="standard" data-theme="filled_black"></div>
@@ -41,74 +44,47 @@
         <img src="./assets/img/lgm-icon-removebg-preview.png" width="115">
 
         <div class="nav-actions">
-
-          <!-- BOTÓN INSTRUCCIONES -->
           <button class="help-btn" onclick="toggleInstructions()">
             ?
             <span>Instrucciones</span>
           </button>
 
-          <!-- MODAL -->
           <div id="instructions-modal" class="instructions-modal">
             <div class="instructions-card">
               <div class="instructions-header">
                 <h3>¿Cómo se juega?</h3>
                 <button class="close-help" onclick="toggleInstructions()">✕</button>
               </div>
-
               <div class="instructions-content">
-
                 <div class="instruction-item">
                   <span class="instruction-icon">🎵</span>
-                  <p>
-                    Vas a escuchar fragmentos de una canción y tenés que adivinar cuál es.
-                  </p>
+                  <p>Vas a escuchar fragmentos de una canción y tenés que adivinar cuál es.</p>
                 </div>
-
                 <div class="instruction-item">
                   <span class="instruction-icon">⏱️</span>
-                  <p>
-                    Tenés <strong>6 intentos</strong>. En cada intento escuchás más segundos:
-                    <strong>0.5s → 1s → 2s → 5s → 10s → 30s</strong>.
-                  </p>
+                  <p>Tenés <strong>6 intentos</strong>. En cada intento escuchás más segundos: <strong>0.5s → 1s → 2s → 5s → 10s → 30s</strong>.</p>
                 </div>
-
                 <div class="instruction-item">
                   <span class="instruction-icon">⏭️</span>
-                  <p>
-                    Si no la sabés, podés usar <strong>Skip</strong> para saltar el intento y escuchar un poco más de la
-                    canción.
-                  </p>
+                  <p>Si no la sabés, podés usar <strong>Skip</strong> para saltar el intento y escuchar un poco más.</p>
                 </div>
-
                 <div class="instruction-item">
                   <span class="instruction-icon">🔀</span>
-                  <p>
-                    También podés usar <strong>Saltar canción</strong> para recibir una canción nueva.
-                  </p>
+                  <p>También podés usar <strong>Saltar canción</strong> para recibir una canción nueva.</p>
                 </div>
-
                 <div class="instruction-item">
                   <span class="instruction-icon">🎼</span>
-                  <p>
-                    Elegí un <strong>género musical</strong> para aumentar tus chances de reconocer canciones.
-                  </p>
+                  <p>Elegí un <strong>género musical</strong> para aumentar tus chances de reconocer canciones.</p>
                 </div>
-
                 <div class="instruction-item">
                   <span class="instruction-icon">⭐</span>
-                  <p>
-                    Cuanto antes adivines, más puntos conseguís. Y si adivinas en el primer intento te llevas una
-                    Estrella⭐.
-                  </p>
+                  <p>Cuanto antes adivines, más puntos conseguís. Si adivinás en el primer intento te llevás una Estrella⭐.</p>
                 </div>
-
               </div>
             </div>
           </div>
 
           <button onclick="handleLogout()">Cerrar sesión</button>
-
         </div>
       </header>
 
@@ -136,15 +112,12 @@
           <div class="dot"></div>
         </div>
 
-        <!-- REPRODUCTOR ESTILO SONGLES -->
         <div class="songles-player">
           <div class="songles-header">
             <span id="current-limit-display" class="badge">0.5s</span>
             <span class="songles-time-text" id="songles-time-text">0.0s</span>
           </div>
-          <div class="songles-bar-wrap" id="songles-bar-wrap">
-            <!-- Segmentos generados desde JS -->
-          </div>
+          <div class="songles-bar-wrap" id="songles-bar-wrap"></div>
           <button class="songles-play-btn" id="songles-play-btn" onclick="togglePlay()">
             <svg id="play-icon" viewBox="0 0 24 24" fill="currentColor">
               <polygon points="6,3 20,12 6,21" />
@@ -156,9 +129,7 @@
           </button>
         </div>
 
-        <!-- Audio oculto, solo para reproducción -->
         <audio id="song-preview" style="display:none" preload="auto"></audio>
-
         <p id="feedback-message">¡Dale Play para empezar!</p>
       </div>
 
@@ -187,5 +158,4 @@
   <script src="./js/game.js"></script>
   <script src="./js/instructions.js"></script>
 </body>
-
 </html>

@@ -522,3 +522,15 @@ header button:hover {
   }
 
 }
+
+/* AUTH ERROR */
+.auth-error {
+  width: 100%;
+  background: #2d1a1a;
+  border: 1px solid #8b2222;
+  color: #cf7a7a;
+  border-radius: 8px;
+  padding: 9px 14px;
+  font-size: 13px;
+  text-align: center;
+}

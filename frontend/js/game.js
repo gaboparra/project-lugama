@@ -47,9 +47,7 @@ function refreshUI() {
 
 async function handleCheck() {
   const answer = document.getElementById("guess-input").value;
-
   const msg = document.getElementById("feedback-message");
-
   try {
     const res = await fetch(`${API_URL}/songs/validate`, {
       method: "POST",
@@ -64,10 +62,12 @@ async function handleCheck() {
     const data = await res.json();
 
     if (data.correct) {
-      msg.innerText = "¡Correcto!";
-
+      const star = data.starEarned ? " ⭐ ¡ESTRELLA!" : "";
+      msg.innerText  = `¡Correcto! +${data.pointsEarned} pts.${star}`;
+      msg.style.color = "green";
+      document.getElementById('user-points').innerText = data.totalPoints;
+      document.getElementById('user-stars').innerText  = data.totalStars;
       showFinalData(data.fullData);
-
       return;
     }
 
@@ -89,14 +89,15 @@ async function handleCheck() {
 }
 
 function handleSkip() {
-  if (currentAttempt >= MAX_ATTEMPTS) {
-    return;
-  }
-
-  currentAttempt++;
-
-  refreshUI();
-  updateAudioLimit();
+      if (document.getElementById('guess-input').disabled) return;
+    if (currentAttempt >= MAX_ATTEMPTS) {
+        handleCheck();
+    } else {
+        currentAttempt++;
+        refreshUI();
+        updateAudioLimit();
+        document.getElementById('guess-input').value = "";
+    }
 }
 
 async function handleSearch(query) {
@@ -116,6 +117,8 @@ async function handleSearch(query) {
     const option = document.createElement("option");
 
     option.value = song.title;
+    option.textContent = song.artist;
+    list.appendChild(option);
 
     list.appendChild(option);
   });
@@ -125,6 +128,7 @@ function showFinalData(songData) {
   document.getElementById("guess-input").disabled = true;
   document.getElementById("song-info").style.display = "flex";
   document.getElementById("album-cover").src = songData.albumCover;
-  document.getElementById("song-details").innerText =
-    `${songData.title} - ${songData.artist}`;
+  document.getElementById("song-details").innerText = `${songData.title} - ${songData.artist}`;
+   if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    document.getElementById('song-preview').onplay = null;
 }
