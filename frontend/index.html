@@ -5,9 +5,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LUGAMA - Say No More</title>
-  <link rel="icon" href="./assets/img/icon-test-1-removebg-preview.png">
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/index.css">
+  <link rel="icon" href="/assets/img/icon-test-1-removebg-preview.png">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="/css/index.css">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 
@@ -15,7 +16,7 @@
 
   <div id="auth-section" class="auth-wrap" style="display:flex">
     <div class="auth-card">
-      <img src="./assets/img/lgm-icon-removebg-preview.png" width="150">
+      <img src="/assets/img/lgm-icon-removebg-preview.png" width="150">
       <h1 id="auth-title">Login</h1>
       <input type="text" id="reg-username" placeholder="Nombre de usuario" style="display:none">
       <input type="email" id="email" placeholder="Email">
@@ -27,8 +28,7 @@
       <button id="btn-main" onclick="handleLogin()">Entrar</button>
 
       <div id="google-btn-container" style="margin-top:15px; display:flex; justify-content:center;">
-        <div id="g_id_onload"
-          data-client_id="766669482921-06i6pn5nn4ig0f3ba6djp6l7q63aahur.apps.googleusercontent.com"
+        <div id="g_id_onload" data-client_id="766669482921-06i6pn5nn4ig0f3ba6djp6l7q63aahur.apps.googleusercontent.com"
           data-callback="handleGoogleLogin">
         </div>
         <div class="g_id_signin" data-type="standard" data-theme="filled_black"></div>
@@ -41,7 +41,7 @@
   <div id="game-section" style="display:none">
     <div class="game-wrap">
       <header>
-        <img src="./assets/img/lgm-icon-removebg-preview.png" width="115">
+        <img src="/assets/img/lgm-icon-removebg-preview.png" width="115">
 
         <div class="nav-actions">
           <button class="help-btn" onclick="toggleInstructions()">
@@ -62,7 +62,8 @@
                 </div>
                 <div class="instruction-item">
                   <span class="instruction-icon">⏱️</span>
-                  <p>Tenés <strong>6 intentos</strong>. En cada intento escuchás más segundos: <strong>0.5s → 1s → 2s → 5s → 10s → 30s</strong>.</p>
+                  <p>Tenés <strong>6 intentos</strong>. En cada intento escuchás más segundos: <strong>0.5s → 1s → 2s →
+                      5s → 10s → 30s</strong>.</p>
                 </div>
                 <div class="instruction-item">
                   <span class="instruction-icon">⏭️</span>
@@ -78,7 +79,8 @@
                 </div>
                 <div class="instruction-item">
                   <span class="instruction-icon">⭐</span>
-                  <p>Cuanto antes adivines, más puntos conseguís. Si adivinás en el primer intento te llevás una Estrella⭐.</p>
+                  <p>Cuanto antes adivines, más puntos conseguís. Si adivinás en el primer intento te llevás una
+                    Estrella⭐.</p>
                 </div>
               </div>
             </div>
@@ -151,11 +153,12 @@
 
   <footer class="site-footer">© Lugama. Todos los derechos reservados.</footer>
 
-  <script src="./js/auth.js"></script>
-  <script src="./js/index.js"></script>
-  <script src="./js/genre.js"></script>
-  <script src="./js/player.js"></script>
-  <script src="./js/game.js"></script>
-  <script src="./js/instructions.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/index.js"></script>
+  <script src="/js/genre.js"></script>
+  <script src="/js/player.js"></script>
+  <script src="/js/game.js"></script>
+  <script src="/js/instructions.js"></script>
 </body>
+
 </html>
