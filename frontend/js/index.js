@@ -11,6 +11,18 @@ const TIME_LIMITS = {
   6: 30,
 };
 
+const fondos = [
+    "../assets/backgrounds/fondo-coraje.png",
+    "../assets/backgrounds/fondo-gengar.png",
+    "../assets/backgrounds/gomu-gomu-expanded.png",
+    "../assets/backgrounds/purple-city-expanded.png",
+    "../assets/backgrounds/gengars-fondo.png"
+    // agregás todos los que tengas
+];
+
+const fondoAleatorio = fondos[Math.floor(Math.random() * fondos.length)];
+document.documentElement.style.setProperty("--fondo-bg", `url('${fondoAleatorio}')`);
+
 let currentSongId = null;
 let currentAttempt = 1;
 let isRegisterMode = false;

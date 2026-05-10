@@ -29,7 +29,7 @@ body::before {
   content: '';
   position: fixed;
   inset: 0;
-  background-image: url('../assets/img/fondo-gengar.png');
+  background-image: var(--fondo-bg);
   background-size: cover;
   background-position: center;
   opacity: 0.5;

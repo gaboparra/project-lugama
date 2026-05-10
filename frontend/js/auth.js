@@ -102,6 +102,11 @@ window.handleLogin = async function () {
     const email    = document.getElementById("email").value;
     const password = document.getElementById("password").value;
 
+    if (!email || !password) {
+        showAuthError("Completá todos los campos");
+        return;
+    }
+
     try {
         const res  = await fetch(`${window.API_URL}/auth/login`, {
             method: "POST",
