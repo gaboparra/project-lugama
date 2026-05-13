@@ -1,132 +1,36 @@
-import { OAuth2Client } from "google-auth-library";
-import User from "../models/User.js";
-import { generateToken } from "../utils/generateToken.js";
+import * as authService from "../services/auth.service.js";
 
 export const register = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
-
-    const existingUser = await User.findOne({
-      $or: [{ email }, { username }],
-    });
-
-    if (existingUser) {
-      return res.status(400).json({
-        error: "User or email already in use",
-      });
-    }
-
-    const newUser = await User.create({
-      username,
-      email,
-      password,
-    });
-
-    const token = generateToken(newUser);
-
-    res.status(201).json({
-      message: "User registered successfully",
-      token,
-      user: {
-        id: newUser._id,
-        username: newUser.username,
-        points: newUser.points,
-        stars: newUser.stars,
-      },
-    });
+    const result = await authService.registerUser(req.body);
+    res.status(201).json({ message: "User registered successfully", ...result });
   } catch (error) {
-    res.status(500).json({
-      error: "Server error",
-    });
+    res.status(error.status || 500).json({ error: error.message });
   }
 };
 
 export const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
-
-    const user = await User.findOne({ email });
-
-    if (!user) {
-      return res.status(400).json({
-        error: "Invalid credentials",
-      });
-    }
-
-    const isMatch = await user.comparePassword(password);
-
-    if (!isMatch) {
-      return res.status(400).json({
-        error: "Invalid credentials",
-      });
-    }
-
-    const token = generateToken(user);
-
-    res.json({
-      message: "Login successful",
-      token,
-      user: {
-        id: user._id,
-        username: user.username,
-        points: user.points,
-        stars: user.stars,
-      },
-    });
+    const result = await authService.loginUser(req.body);
+    res.status(200).json({ message: "Login successful", ...result });
   } catch (error) {
-    res.status(500).json({
-      error: "Login error",
-    });
+    res.status(error.status || 500).json({ error: error.message });
   }
 };
 
 export const getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select("-password");
-
-    if (!user) return res.status(404).json({ error: "User not found" });
-
+    const user = await authService.getProfile(req.user.id);
     res.json(user);
   } catch (error) {
-    res.status(500).json({ error: "Error getting profile" });
+    res.status(error.status || 500).json({ error: error.message });
   }
 };
 
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-
 export const googleLogin = async (req, res) => {
   try {
-    const { idToken } = req.body;
-
-    const ticket = await client.verifyIdToken({
-      idToken,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-
-    const { email, name, picture, sub: googleId } = ticket.getPayload();
-
-    let user = await User.findOne({ email });
-
-    if (!user) {
-      user = await User.create({
-        username: name,
-        email,
-        googleId,
-      });
-    }
-
-    const token = generateToken(user);
-
-    res.json({
-      message: "Google login successful",
-      token,
-      user: {
-        id: user._id,
-        username: user.username,
-        points: user.points,
-        stars: user.stars,
-      },
-    });
+    const result = await authService.googleLoginUser(req.body.idToken);
+    res.json({ message: "Google login successful", ...result });
   } catch (error) {
     console.error("Google Auth Error:", error);
     res.status(400).json({ error: "Invalid Google token" });
