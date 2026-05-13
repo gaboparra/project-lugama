@@ -1,0 +1,32 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap');
+@import "tailwindcss";
+
+:root {
+  --bg:       #0f0f11;
+  --surface:  #1a1a1f;
+  --surface2: #222228;
+  --purple:   #6b5ce7;
+  --purple-h: #8b7cf0;
+  --white:    #f0eeff;
+  --muted:    #7a788a;
+  --border:   #2d2d38;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--white);
+  min-height: 100vh;
+}
+
+/* Fondo animado */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: var(--fondo-bg);
+  background-size: cover;
+  background-position: center;
+  opacity: 0.5;
+  z-index: -1;
+}
