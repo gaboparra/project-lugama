@@ -17,17 +17,15 @@ app.use(express.urlencoded({ extended: true }));
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Servir frontend
-app.use(express.static(path.join(__dirname, "../frontend")));
-
 // API
 app.use("/api/songs", songRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 
-// Ruta principal
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/index.html"));
+// Frontend React build
+app.use(express.static(path.resolve("frontend/dist")));
+app.use((req, res) => {
+  res.sendFile(path.resolve("frontend/dist/index.html"));
 });
 
 app.use(errorHandler);
