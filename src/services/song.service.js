@@ -2,7 +2,7 @@ import axios from "axios";
 import Song from "../models/Song.js";
 import User from "../models/User.js";
 import { normalizeText } from "../utils/normalizeSong.js";
-import { searchSpotifyTrack } from "./spotify.service.js";
+import { getLastfmData } from "./lastfm.service.js";
 
 const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -13,11 +13,11 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 export const seedSongs = async ({ artists, genre }) => {
   let added = 0, skipped = 0, noPreview = 0;
 
-  const spotifyCache = new Map();
+  const lastfmCache = new Map();
 
   for (const artistQuery of artists) {
     const response = await axios.get(
-      `https://api.deezer.com/search?q=artist:"${encodeURIComponent(artistQuery)}"&limit=50`,
+      `https://api.deezer.com/search?q=artist:"${encodeURIComponent(artistQuery)}"&limit=100`,
     );
     const tracks = response.data.data || [];
 
@@ -46,28 +46,27 @@ export const seedSongs = async ({ artists, genre }) => {
         continue;
       }
 
-      // Cache con has() para manejar correctamente valores null
+      // Last.fm — playcount, popularity, durationMs, albumName
       const cacheKey = `${track.title}-${track.artist.name}`;
-      if (!spotifyCache.has(cacheKey)) {
-        const result = await searchSpotifyTrack(track.title, track.artist.name);
-        spotifyCache.set(cacheKey, result); // null también queda cacheado
-        await sleep(500);
+      if (!lastfmCache.has(cacheKey)) {
+        const result = await getLastfmData(track.title, track.artist.name);
+        lastfmCache.set(cacheKey, result);
+        await sleep(250);
       }
-      const spotifyData = spotifyCache.get(cacheKey);
+      const lastfmData = lastfmCache.get(cacheKey);
 
       await Song.create({
         deezerId: track.id,
         title: track.title,
         artist: track.artist.name,
         previewUrl: track.preview,
-        albumCover: spotifyData?.albumCover || track.album?.cover_medium || "",
+        albumCover: track.album?.cover_medium || "",
         genre: genre || "General",
         difficulty: null,
-        spotifyId: spotifyData?.spotifyId,
-        albumName: spotifyData?.albumName,
-        releaseDate: spotifyData?.releaseDate,
-        durationMs: spotifyData?.durationMs,
-        popularity: spotifyData?.popularity ?? 0,
+        playcount: lastfmData?.playcount ?? 0,
+        popularity: lastfmData?.popularity ?? 0,
+        durationMs: lastfmData?.durationMs ?? null,
+        albumName: lastfmData?.albumName || null,
       });
       added++;
     }
@@ -118,7 +117,7 @@ export const getRandomSong = async (genre) => {
     Math.floor(Math.random() * count),
   );
 
-  // Intentar refrescar la preview desde Deezer
+  // Refrescar preview desde Deezer (las URLs expiran)
   try {
     const response = await axios.get(
       `https://api.deezer.com/search?q=track:"${encodeURIComponent(song.title)}" artist:"${encodeURIComponent(song.artist)}"`,
@@ -176,7 +175,6 @@ export const searchSongsInDb = async (q) => {
     .limit(15);
 };
 
-// No devuelve nada si no encuentra resultados, en vez de lanzar error.
 export const searchExternal = async (query) => {
   const response = await axios.get(
     `https://api.deezer.com/search?q=${encodeURIComponent(query)}`,
