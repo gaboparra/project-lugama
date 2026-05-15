@@ -38,7 +38,12 @@ export const deleteSong = async (req, res) => {
 
 export const getRandomSong = async (req, res) => {
   try {
-    const song = await songService.getRandomSong(req.query.genre);
+    // género y dificultad opcionales: /api/songs/random?genre=Rock Argentino&difficulty=2
+    const { genre, difficulty } = req.query;
+    const song = await songService.getRandomSong(
+      genre,
+      difficulty ? parseInt(difficulty) : null,
+    );
     res.json(song);
   } catch (error) {
     res.status(error.status || 500).json({ error: error.message });
@@ -94,7 +99,7 @@ export const getExistingGenres = async (req, res) => {
   try {
     const genres = await songService.getGenres();
     res.json(genres);
-  } catch {
+  } catch (error) {
     res.status(500).json({ error: "Error fetching genres" });
   }
 };

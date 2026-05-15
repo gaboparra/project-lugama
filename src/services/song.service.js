@@ -5,10 +5,58 @@ import { normalizeText } from "../utils/normalizeSong.js";
 import { getLastfmData } from "./lastfm.service.js";
 
 const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// ── Popularidad relativa por género ───────────────────────────────────────────
+
+const recalculatePopularityByGenre = async (genre) => {
+  const songs = await Song.find({ genre }).select("_id playcount");
+  if (songs.length === 0) return;
+
+  const sorted = songs.map((s) => s.playcount).sort((a, b) => a - b);
+  const p95Index = Math.floor(sorted.length * 0.95);
+  const cap = sorted[p95Index] || sorted[sorted.length - 1] || 1;
+
+  const bulkOps = songs.map((song) => ({
+    updateOne: {
+      filter: { _id: song._id },
+      update: {
+        $set: {
+          popularity: Math.min(Math.round((song.playcount / cap) * 100), 100),
+        },
+      },
+    },
+  }));
+
+  await Song.bulkWrite(bulkOps);
+  console.log(
+    `Popularity recalculada para ${songs.length} canciones de "${genre}" (cap: ${cap.toLocaleString()} plays)`,
+  );
+};
+
 // ── Seed ──────────────────────────────────────────────────────────────────────
+
+// Trae todas las canciones de un artista paginando de a 100
+const fetchAllDeezerTracks = async (artistQuery) => {
+  const allTracks = [];
+  let index = 0;
+
+  while (true) {
+    const response = await axios.get(
+      `https://api.deezer.com/search?q=artist:"${encodeURIComponent(artistQuery)}"&limit=100&index=${index}`,
+    );
+    const tracks = response.data.data || [];
+    allTracks.push(...tracks);
+
+    // Si devolvió menos de 100, no hay más páginas
+    if (tracks.length < 100) break;
+
+    index += 100;
+    await sleep(300); // pausa entre páginas para no saturar Deezer
+  }
+
+  return allTracks;
+};
 
 export const seedSongs = async ({ artists, genre }) => {
   let added = 0, skipped = 0, noPreview = 0;
@@ -16,10 +64,7 @@ export const seedSongs = async ({ artists, genre }) => {
   const lastfmCache = new Map();
 
   for (const artistQuery of artists) {
-    const response = await axios.get(
-      `https://api.deezer.com/search?q=artist:"${encodeURIComponent(artistQuery)}"&limit=100`,
-    );
-    const tracks = response.data.data || [];
+    const tracks = await fetchAllDeezerTracks(artistQuery);
 
     for (const track of tracks) {
       if (!track.preview) {
@@ -46,7 +91,6 @@ export const seedSongs = async ({ artists, genre }) => {
         continue;
       }
 
-      // Last.fm — playcount, popularity, durationMs, albumName
       const cacheKey = `${track.title}-${track.artist.name}`;
       if (!lastfmCache.has(cacheKey)) {
         const result = await getLastfmData(track.title, track.artist.name);
@@ -64,13 +108,15 @@ export const seedSongs = async ({ artists, genre }) => {
         genre: genre || "General",
         difficulty: null,
         playcount: lastfmData?.playcount ?? 0,
-        popularity: lastfmData?.popularity ?? 0,
+        popularity: 0,
         durationMs: lastfmData?.durationMs ?? null,
         albumName: lastfmData?.albumName || null,
       });
       added++;
     }
   }
+
+  await recalculatePopularityByGenre(genre || "General");
 
   return {
     genre_added: genre || "General",
@@ -107,17 +153,29 @@ export const deleteSong = async (id) => {
 
 // ── Juego ─────────────────────────────────────────────────────────────────────
 
-export const getRandomSong = async (genre) => {
-  const filter = genre ? { genre } : {};
+export const getRandomSong = async (genre, difficulty) => {
+  let filter = genre ? { genre } : {};
+
+  if (difficulty) {
+    const ranges = {
+      1: { $gte: 75 },
+      2: { $gte: 50, $lt: 75 },
+      3: { $gte: 25, $lt: 50 },
+      4: { $lt: 25 },
+    };
+    if (ranges[difficulty]) filter.popularity = ranges[difficulty];
+  }
+
   const count = await Song.countDocuments(filter);
   if (count === 0)
-    throw Object.assign(new Error("No songs for this genre"), { status: 404 });
+    throw Object.assign(new Error("No songs found for this genre/difficulty"), {
+      status: 404,
+    });
 
   const song = await Song.findOne(filter).skip(
     Math.floor(Math.random() * count),
   );
 
-  // Refrescar preview desde Deezer (las URLs expiran)
   try {
     const response = await axios.get(
       `https://api.deezer.com/search?q=track:"${encodeURIComponent(song.title)}" artist:"${encodeURIComponent(song.artist)}"`,
