@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useAuth } from "../context/AuthContext";
 import useGame from "../hooks/useGame";
 import StatsBar from "../components/StatsBar";
@@ -45,7 +45,11 @@ export default function GamePage() {
     gameOver,
   } = useGame(onUserUpdate);
 
+  // useRef para llamar solo una vez al montar sin agregar dependencias
+  const initialized = useRef(false);
   useEffect(() => {
+    if (initialized.current) return;
+    initialized.current = true;
     loadGenres();
     loadSong();
   }, []);
@@ -66,26 +70,24 @@ export default function GamePage() {
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      handleCheck();
-    }
+    if (e.key === "Enter") handleCheck();
   };
 
   return (
     <div className="min-h-screen flex flex-col">
       <header className="site-header">
         <img src={logo} alt="Lugama" className="h-10" />
-
         <div className="flex items-center gap-3">
           <InstructionsModal />
-
           <button className="btn-header" onClick={logout}>
             Cerrar sesión
           </button>
         </div>
       </header>
 
-      <main className="flex-1 flex justify-center pt-24 pb-12 px-4">
+      {/* pb-20 en mobile para que el footer fijo no tape el contenido */}
+      {/* En desktop (md+) centramos verticalmente con items-center      */}
+      <main className="flex-1 flex justify-center pt-24 pb-20 px-4 sm:pb-16 md:pb-12 md:items-center">
         <div className="w-full max-w-xl flex flex-col gap-4">
           <StatsBar user={localUser} attempt={attempt} />
 
@@ -126,7 +128,6 @@ export default function GamePage() {
               placeholder="¿Qué canción es?"
               list="songs-list"
             />
-
             <datalist id="songs-list">
               {suggestions.map((s) => (
                 <option key={s._id} value={s.title}>
@@ -142,7 +143,6 @@ export default function GamePage() {
             >
               Adivinar
             </button>
-
             <button
               className="btn btn-secondary"
               onClick={handleSkip}
@@ -150,7 +150,6 @@ export default function GamePage() {
             >
               Skip
             </button>
-
             <button className="btn btn-secondary" onClick={handleNewSong}>
               Saltar canción
             </button>

@@ -38,7 +38,7 @@ const VolumeIcon = ({ level }) => {
 }
 
 export default function Player({
-  audioRef, attempt, feedback,
+  attempt, feedback,
   isPlaying, currentTime, volume, gameOver,
   TIME_LIMITS, MAX_ATTEMPTS,
   onTogglePlay, onVolumeChange,
