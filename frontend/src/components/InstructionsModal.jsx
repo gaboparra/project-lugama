@@ -6,6 +6,7 @@ const ITEMS = [
   { icon: '⏭️', text: <>Si no la sabés, podés usar <strong>Skip</strong> para saltar el intento.</> },
   { icon: '🔀', text: <>También podés usar <strong>Saltar canción</strong> para recibir una nueva.</> },
   { icon: '🎼', text: <>Elegí un <strong>género musical</strong> para aumentar tus chances.</> },
+  { icon: '💀', text: <>Podés elegir la <strong>dificultad</strong>: Fácil trae canciones muy conocidas, Extremo las más oscuras.</> },
   { icon: '⭐', text: <>Cuanto antes adivines, más puntos. Si adivinás en el primer intento te llevás una Estrella⭐.</> },
 ]
 

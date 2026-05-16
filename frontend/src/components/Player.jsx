@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import Dots from './Dots'
 
-// ── Íconos ────────────────────────────────────────────────────────────────────
-const PlayIcon  = () => (
+const PlayIcon = () => (
   <svg viewBox="0 0 24 24" fill="white" width={18} height={18}>
     <path d="M6 3l14 9-14 9V3z" />
   </svg>
@@ -38,17 +37,15 @@ const VolumeIcon = ({ level }) => {
   )
 }
 
-// ── Componente ────────────────────────────────────────────────────────────────
 export default function Player({
   audioRef, attempt, feedback,
-  isPlaying, currentTime, volume,
+  isPlaying, currentTime, volume, gameOver,
   TIME_LIMITS, MAX_ATTEMPTS,
   onTogglePlay, onVolumeChange,
 }) {
   const [showVolume, setShowVolume] = useState(false)
   const volRef = useRef(null)
 
-  // Cerrar slider al clickear afuera
   useEffect(() => {
     const handler = (e) => {
       if (volRef.current && !volRef.current.contains(e.target)) setShowVolume(false)
@@ -57,16 +54,19 @@ export default function Player({
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  const time       = currentTime ?? 0
-  const totalTime  = TIME_LIMITS[MAX_ATTEMPTS]
-  const segStart   = TIME_LIMITS[attempt - 1] || 0
-  const segDur     = TIME_LIMITS[attempt] - segStart
-  const segFill    = Math.min(Math.max((time - segStart) / segDur, 0), 1) * 100
+  const time         = currentTime ?? 0
+  const totalTime    = TIME_LIMITS[MAX_ATTEMPTS]
   const indicatorPct = Math.min(time / totalTime, 1) * 100
 
+  const segStart = TIME_LIMITS[attempt - 1] || 0
+  const segDur   = TIME_LIMITS[attempt] - segStart
+  const segFill  = Math.min(Math.max((time - segStart) / segDur, 0), 1) * 100
+
+  // Fix 6to segmento: si TIME_LIMITS[i+1] no existe, va hasta el total
   const segments = Array.from({ length: MAX_ATTEMPTS }, (_, i) => {
-    const prev = TIME_LIMITS[i] || 0
-    const dur  = TIME_LIMITS[i + 1] - prev
+    const from = TIME_LIMITS[i] || 0
+    const to   = TIME_LIMITS[i + 1]
+    const dur  = to !== undefined ? to - from : totalTime - from
     return { id: i + 1, widthPct: (dur / totalTime) * 100 }
   })
 
@@ -77,11 +77,12 @@ export default function Player({
   return (
     <div className="card flex flex-col gap-3">
 
-      <Dots current={attempt} max={MAX_ATTEMPTS} />
+      <Dots current={attempt} max={MAX_ATTEMPTS} gameOver={gameOver} />
 
-      {/* Badge tiempo + contador */}
       <div className="flex items-center justify-between">
-        <span className="badge-time">{TIME_LIMITS[attempt]}s</span>
+        <span className="badge-time">
+          {gameOver ? '30s' : `${TIME_LIMITS[attempt]}s`}
+        </span>
         <span className="text-muted text-xs tabular-nums">{time.toFixed(1)}s</span>
       </div>
 
@@ -90,7 +91,10 @@ export default function Player({
         <div className="bar-indicator" style={{ left: `${indicatorPct}%` }} />
 
         {segments.map(({ id, widthPct }) => {
-          const state = id < attempt ? 'done' : id === attempt ? 'active' : 'idle'
+          const state = gameOver
+            ? 'done'
+            : id < attempt ? 'done' : id === attempt ? 'active' : 'idle'
+
           return (
             <div
               key={id}
@@ -114,7 +118,6 @@ export default function Player({
           {isPlaying ? <PauseIcon /> : <PlayIcon />}
         </button>
 
-        {/* Volumen expandible */}
         <div ref={volRef} className="flex items-center">
           <button className="btn-volume" onClick={() => setShowVolume(v => !v)}>
             <VolumeIcon level={volume} />

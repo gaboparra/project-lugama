@@ -42,6 +42,7 @@ export default function GamePage() {
     changeVolume,
     difficulty,
     changeDifficulty,
+    gameOver,
   } = useGame(onUserUpdate);
 
   useEffect(() => {
@@ -103,6 +104,7 @@ export default function GamePage() {
             isPlaying={isPlaying}
             currentTime={currentTime ?? 0}
             volume={volume}
+            gameOver={gameOver}
             TIME_LIMITS={TIME_LIMITS}
             MAX_ATTEMPTS={MAX_ATTEMPTS}
             onTogglePlay={togglePlay}
