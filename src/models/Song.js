@@ -7,7 +7,7 @@ const SongSchema = new mongoose.Schema(
     previewUrl: { type: String, required: true },
 
     // Last.fm + metadata
-    playcount: { type: Number, default: 0 }, // reproducciones reales
+    playcount: { type: Number, default: 0 }, // reproducciones
     popularity: { type: Number, default: 0 }, // 0-100, normalizado de playcount
     albumName: { type: String },
     durationMs: { type: Number },

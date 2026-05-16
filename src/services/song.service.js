@@ -10,30 +10,52 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 // ── Filtro de versiones alternativas ─────────────────────────────────────────
 const ALTERNATIVE_VERSION_KEYWORDS = [
   // Remasters
-  'remaster', 'remastered', 'remasterizado',
+  "remaster",
+  "remastered",
+  "remasterizado",
   // En vivo
-  'live', 'en vivo', 'vivo', 'directo', 'en directo', 'gira', 'tour', 'concert',
-  // Versiones de estudio alternativas
-  'acoustic', 'acústico', 'acustico', 'unplugged',
-  'demo', 'outtake', 'instrumental', 'karaoke',
+  "live",
+  "en vivo",
+  "vivo",
+  "directo",
+  "en directo",
+  "gira",
+  "tour",
+  "concert",
+  // Versiones alternativas de estudio
+  "acoustic",
+  "acústico",
+  "acustico",
+  "unplugged",
+  "demo",
+  "outtake",
+  "instrumental",
+  "karaoke",
+  // Ediciones de radio/single
+  "radio edit",
+  "single version",
+  "mono version",
+  "stereo version",
+  "original mix",
   // Ediciones especiales
-  'bonus track', 'anniversary edition',
-
-  // Otros (agresivos, revisar por si acaso)
-  // 'remix', 'edit', 
-  // 'version', 'versión', 
-  // 'deluxe', 'extended', 
-  // 'bonus', 'release'
-
-  // Revisar por si acaso, pueden ser válidos: 'radio edit', 'single edit', 'single version', 'mono version', 'stereo version', 'original mix',
-  // 'Album Version', 'Single Version', 'Mono Version', '
-  // Stereo Version', 'Original Mix', 'Original Version'
-]
+  "bonus track",
+  "anniversary edition",
+  // Otras
+  // 'remix'    → puede ser canción famosa por sí sola
+  // 'edit'     → muy genérico, puede aparecer en títulos normales
+  // 'version'  → demasiado amplio, "La Versión de Rodrigo" sería filtrada
+  // 'versión'  → ídem
+  // 'deluxe'   → aparece más en álbumes que en tracks
+  // 'extended' → hay extended mixes que son conocidos
+  // 'bonus'    → muy genérico
+  // 'release'  → puede aparecer en cualquier contexto
+  // 'album version' → en realidad ES la versión original en muchos casos
+];
 
 const isAlternativeVersion = (title) => {
-  const lower = title.toLowerCase()
-  return ALTERNATIVE_VERSION_KEYWORDS.some((kw) => lower.includes(kw))
-}
+  const lower = title.toLowerCase();
+  return ALTERNATIVE_VERSION_KEYWORDS.some((kw) => lower.includes(kw));
+};
 
 // ── Popularidad relativa por género ───────────────────────────────────────────
 
@@ -85,7 +107,10 @@ const fetchAllDeezerTracks = async (artistQuery) => {
 };
 
 export const seedSongs = async ({ artists, genre }) => {
-  let added = 0, skipped = 0, noPreview = 0, filtered = 0;
+  let added = 0,
+    skipped = 0,
+    noPreview = 0,
+    filtered = 0;
 
   const lastfmCache = new Map();
 
@@ -93,22 +118,35 @@ export const seedSongs = async ({ artists, genre }) => {
     const tracks = await fetchAllDeezerTracks(artistQuery);
 
     for (const track of tracks) {
-      if (!track.preview) { noPreview++; continue; }
+      if (!track.preview) {
+        noPreview++;
+        continue;
+      }
 
-      if (track.artist.name.toLowerCase() !== artistQuery.toLowerCase()) continue;
+      if (track.artist.name.toLowerCase() !== artistQuery.toLowerCase())
+        continue;
 
       // Filtrar versiones alternativas
-      if (isAlternativeVersion(track.title)) { filtered++; continue; }
+      if (isAlternativeVersion(track.title)) {
+        filtered++;
+        continue;
+      }
 
       const escaped = escapeRegExp(track.title);
       const duplicate = await Song.findOne({
         title: { $regex: `^${escaped}$`, $options: "i" },
         artist: track.artist.name,
       });
-      if (duplicate) { skipped++; continue; }
+      if (duplicate) {
+        skipped++;
+        continue;
+      }
 
       const existsById = await Song.findOne({ deezerId: track.id });
-      if (existsById) { skipped++; continue; }
+      if (existsById) {
+        skipped++;
+        continue;
+      }
 
       const cacheKey = `${track.title}-${track.artist.name}`;
       if (!lastfmCache.has(cacheKey)) {
@@ -119,17 +157,17 @@ export const seedSongs = async ({ artists, genre }) => {
       const lastfmData = lastfmCache.get(cacheKey);
 
       await Song.create({
-        deezerId:   track.id,
-        title:      track.title,
-        artist:     track.artist.name,
+        deezerId: track.id,
+        title: track.title,
+        artist: track.artist.name,
         previewUrl: track.preview,
         albumCover: track.album?.cover_medium || "",
-        genre:      genre || "General",
+        genre: genre || "General",
         difficulty: null,
-        playcount:  lastfmData?.playcount  ?? 0,
+        playcount: lastfmData?.playcount ?? 0,
         popularity: 0,
         durationMs: lastfmData?.durationMs ?? null,
-        albumName:  lastfmData?.albumName  || null,
+        albumName: lastfmData?.albumName || null,
       });
       added++;
     }
@@ -138,12 +176,12 @@ export const seedSongs = async ({ artists, genre }) => {
   await recalculatePopularityByGenre(genre || "General");
 
   return {
-    genre_added:              genre || "General",
-    new_songs:                added,
+    genre_added: genre || "General",
+    new_songs: added,
     skipped,
-    filtered_alt_versions:    filtered,
-    ignored_no_preview:       noPreview,
-    total_in_db:              await Song.countDocuments(),
+    filtered_alt_versions: filtered,
+    ignored_no_preview: noPreview,
+    total_in_db: await Song.countDocuments(),
   };
 };
 
@@ -158,7 +196,9 @@ export const getAllSongs = async () => {
 };
 
 export const updateSong = async (id, data) => {
-  const song = await Song.findByIdAndUpdate(id, data, { returnDocument: "after" });
+  const song = await Song.findByIdAndUpdate(id, data, {
+    returnDocument: "after",
+  });
   if (!song) throw Object.assign(new Error("Song not found"), { status: 404 });
   return song;
 };
@@ -186,9 +226,13 @@ export const getRandomSong = async (genre, difficulty) => {
 
   const count = await Song.countDocuments(filter);
   if (count === 0)
-    throw Object.assign(new Error("No songs found for this genre/difficulty"), { status: 404 });
+    throw Object.assign(new Error("No songs found for this genre/difficulty"), {
+      status: 404,
+    });
 
-  const song = await Song.findOne(filter).skip(Math.floor(Math.random() * count));
+  const song = await Song.findOne(filter).skip(
+    Math.floor(Math.random() * count),
+  );
 
   try {
     const response = await axios.get(
@@ -214,15 +258,17 @@ export const validateAnswer = async ({ songId, answer, attempt, userId }) => {
     const update = { $inc: { points: pointsEarned } };
     if (attempt === 1) update.$inc.stars = 1;
 
-    const user = await User.findByIdAndUpdate(userId, update, { new: true }).select("-password");
+    const user = await User.findByIdAndUpdate(userId, update, {
+      returnDocument: "after",
+    }).select("-password");
 
     return {
-      correct:     true,
+      correct: true,
       pointsEarned,
-      starEarned:  attempt === 1,
+      starEarned: attempt === 1,
       totalPoints: user.points,
-      totalStars:  user.stars,
-      fullData:    song,
+      totalStars: user.stars,
+      fullData: song,
     };
   }
 
@@ -237,7 +283,7 @@ export const searchSongsInDb = async (q) => {
   if (!q) return [];
   return Song.find({
     $or: [
-      { title:  { $regex: q, $options: "i" } },
+      { title: { $regex: q, $options: "i" } },
       { artist: { $regex: q, $options: "i" } },
     ],
   })
@@ -252,8 +298,8 @@ export const searchExternal = async (query) => {
   return response.data.data
     .filter((t) => t.preview?.includes("cdns-preview"))
     .map((t) => ({
-      title:      t.title,
-      artist:     t.artist.name,
+      title: t.title,
+      artist: t.artist.name,
       previewUrl: t.preview,
       albumCover: t.album.cover_medium,
     }));
