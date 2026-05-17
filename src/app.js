@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
+import rateLimit from "express-rate-limit";
 
 import songRoutes from "./routes/song.routes.js";
 import authRoutes from "./routes/auth.routes.js";
@@ -10,6 +11,15 @@ import { errorHandler } from "./middlewares/error.middleware.js";
 
 const app = express();
 
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 200, // 200 requests por IP cada 15 min
+  message: { error: "Too many requests, please try again later" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use(globalLimiter);
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

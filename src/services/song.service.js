@@ -10,9 +10,9 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 // ── Filtro de versiones alternativas ─────────────────────────────────────────
 const ALTERNATIVE_VERSION_KEYWORDS = [
   // Remasters
-  "remaster",
-  "remastered",
-  "remasterizado",
+  // "remaster",
+  // "remastered",
+  // "remasterizado", (Muy agresivos, a menudo el mismo título con diferente capitalización)
   // En vivo
   "live",
   "en vivo",
@@ -100,7 +100,7 @@ const fetchAllDeezerTracks = async (artistQuery) => {
     if (tracks.length < 100) break;
 
     index += 100;
-    // await sleep(300);
+    // await sleep(100);
   }
 
   return allTracks;
@@ -128,6 +128,7 @@ export const seedSongs = async ({ artists, genre }) => {
 
       // Filtrar versiones alternativas
       if (isAlternativeVersion(track.title)) {
+        console.log(`FILTERED: ${track.title}`); // temporal
         filtered++;
         continue;
       }
@@ -152,7 +153,7 @@ export const seedSongs = async ({ artists, genre }) => {
       if (!lastfmCache.has(cacheKey)) {
         const result = await getLastfmData(track.title, track.artist.name);
         lastfmCache.set(cacheKey, result);
-        // await sleep(250);
+        // await sleep(100);
       }
       const lastfmData = lastfmCache.get(cacheKey);
 
@@ -211,9 +212,12 @@ export const deleteSong = async (id) => {
 
 // ── Juego ─────────────────────────────────────────────────────────────────────
 
-export const getRandomSong = async (genre, difficulty) => {
-  let filter = genre ? { genre } : {};
+export const getRandomSong = async (genre, difficulty, artist) => {
+  const filter = {};
 
+  // Todos los parámetros son opcionales e independientes entre sí
+  if (genre) filter.genre = genre;
+  if (artist) filter.artist = { $regex: `^${artist}$`, $options: "i" };
   if (difficulty) {
     const ranges = {
       1: { $gte: 75 },
@@ -226,9 +230,10 @@ export const getRandomSong = async (genre, difficulty) => {
 
   const count = await Song.countDocuments(filter);
   if (count === 0)
-    throw Object.assign(new Error("No songs found for this genre/difficulty"), {
-      status: 404,
-    });
+    throw Object.assign(
+      new Error("No songs found for this filter combination"),
+      { status: 404 },
+    );
 
   const song = await Song.findOne(filter).skip(
     Math.floor(Math.random() * count),
@@ -288,7 +293,7 @@ export const searchSongsInDb = async (q) => {
     ],
   })
     .collation({ locale: "en", strength: 1 })
-    .limit(20);
+    .limit(50);
 };
 
 export const searchExternal = async (query) => {
@@ -308,3 +313,6 @@ export const searchExternal = async (query) => {
 export const getGenres = async () => {
   return Song.distinct("genre");
 };
+
+// Artistas disponibles en la BD (para el selector del modo por artista/banda)
+export const getArtists = async () => Song.distinct("artist");
