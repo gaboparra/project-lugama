@@ -286,14 +286,31 @@ export const validateAnswer = async ({ songId, answer, attempt, userId }) => {
 
 export const searchSongsInDb = async (q) => {
   if (!q) return [];
-  return Song.find({
-    $or: [
-      { title: { $regex: q, $options: "i" } },
-      { artist: { $regex: q, $options: "i" } },
-    ],
-  })
-    .collation({ locale: "en", strength: 1 })
-    .limit(50);
+
+  const results = await Song.aggregate([
+    {
+      $search: {
+        index: "default",
+        text: {
+          query: q,
+          path: ["title", "artist"],
+          fuzzy: { maxEdits: 1 }, // tolera 1 error tipográfico
+        },
+      },
+    },
+    { $limit: 50 },
+    {
+      $project: {
+        _id: 1,
+        title: 1,
+        artist: 1,
+        genre: 1,
+        albumCover: 1,
+      },
+    },
+  ]);
+
+  return results;
 };
 
 export const searchExternal = async (query) => {
@@ -314,5 +331,4 @@ export const getGenres = async () => {
   return Song.distinct("genre");
 };
 
-// Artistas disponibles en la BD (para el selector del modo por artista/banda)
 export const getArtists = async () => Song.distinct("artist");
