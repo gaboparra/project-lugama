@@ -291,10 +291,28 @@ export const searchSongsInDb = async (q) => {
     {
       $search: {
         index: "default",
-        text: {
-          query: q,
-          path: ["title", "artist"],
-          fuzzy: { maxEdits: 1 }, // tolera 1 error tipográfico
+        compound: {
+          should: [
+            {
+              text: {
+                query: q,
+                path: ["title", "artist"],
+                fuzzy: { maxEdits: 1 },
+              },
+            },
+            {
+              autocomplete: {
+                query: q,
+                path: "title",
+              },
+            },
+            {
+              autocomplete: {
+                query: q,
+                path: "artist",
+              },
+            },
+          ],
         },
       },
     },

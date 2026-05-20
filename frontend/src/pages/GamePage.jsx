@@ -13,6 +13,8 @@ export default function GamePage() {
 
   const [localUser, setLocalUser] = useState(user);
   const [guess, setGuess] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef(null);
 
   const onUserUpdate = useCallback((updates) => {
     setLocalUser((u) => ({ ...u, ...updates }));
@@ -45,7 +47,6 @@ export default function GamePage() {
     gameOver,
   } = useGame(onUserUpdate);
 
-  // useRef para llamar solo una vez al montar sin agregar dependencias
   const initialized = useRef(false);
   useEffect(() => {
     if (initialized.current) return;
@@ -54,23 +55,50 @@ export default function GamePage() {
     loadSong();
   }, []);
 
+  // Cerrar dropdown al clickear fuera
+  useEffect(() => {
+    const handler = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
   const handleCheck = () => {
     check(guess);
     setGuess("");
+    setShowDropdown(false);
   };
 
   const handleSkip = () => {
     skip();
     setGuess("");
+    setShowDropdown(false);
   };
 
   const handleNewSong = () => {
     loadSong();
     setGuess("");
+    setShowDropdown(false);
   };
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") handleCheck();
+    if (e.key === "Escape") setShowDropdown(false);
+  };
+
+  const handleInputChange = (e) => {
+    const val = e.target.value;
+    setGuess(val);
+    search(val);
+    setShowDropdown(val.length >= 2);
+  };
+
+  const handleSuggestionClick = (title) => {
+    setGuess(title);
+    setShowDropdown(false);
   };
 
   return (
@@ -85,8 +113,6 @@ export default function GamePage() {
         </div>
       </header>
 
-      {/* pb-20 en mobile para que el footer fijo no tape el contenido */}
-      {/* En desktop (md+) centramos verticalmente con items-center      */}
       <main className="flex-1 flex justify-center pt-24 pb-20 px-4 sm:pb-16 md:pb-12 md:items-center">
         <div className="w-full max-w-xl flex flex-col gap-4">
           <StatsBar user={localUser} attempt={attempt} />
@@ -116,25 +142,60 @@ export default function GamePage() {
           {revealedSong && <SongReveal song={revealedSong} />}
 
           <div className="flex flex-col gap-2">
-            <input
-              className="input-base"
-              value={guess}
-              onChange={(e) => {
-                setGuess(e.target.value);
-                search(e.target.value);
-              }}
-              onKeyDown={handleKeyDown}
-              disabled={guessDisabled}
-              placeholder="¿Qué canción es?"
-              list="songs-list"
-            />
-            <datalist id="songs-list">
-              {suggestions.map((s) => (
-                <option key={s._id} value={s.title}>
-                  {s.artist}
-                </option>
-              ))}
-            </datalist>
+            {/* Input con dropdown custom */}
+            <div className="relative" ref={dropdownRef}>
+              <input
+                className="input-base"
+                value={guess}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                onFocus={() => guess.length >= 2 && setShowDropdown(true)}
+                disabled={guessDisabled}
+                placeholder="¿Qué canción es?"
+                autoComplete="off"
+              />
+
+              {showDropdown && suggestions.length > 0 && (
+                <ul
+                  className="absolute left-0 right-0 top-full mt-1 rounded-xl overflow-hidden z-50"
+                  style={{
+                    background: "var(--surface)",
+                    border: "1px solid var(--border)",
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+                    maxHeight: "220px",
+                    overflowY: "auto",
+                  }}
+                >
+                  {suggestions.map((s) => (
+                    <li
+                      key={s._id}
+                      onMouseDown={() => handleSuggestionClick(s.title)}
+                      className="px-4 py-2.5 cursor-pointer flex flex-col gap-0.5"
+                      style={{ borderBottom: "1px solid var(--border)" }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.background = "var(--surface2)")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.background = "transparent")
+                      }
+                    >
+                      <span
+                        className="text-sm font-medium"
+                        style={{ color: "var(--white)" }}
+                      >
+                        {s.title}
+                      </span>
+                      <span
+                        className="text-xs"
+                        style={{ color: "var(--muted)" }}
+                      >
+                        {s.artist}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
 
             <button
               className="btn btn-primary"
