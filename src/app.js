@@ -35,7 +35,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/challenges", challengeRoutes);
 
-// Frontend React build
+// React build
 app.use(express.static(path.resolve("frontend/dist")));
 app.use((req, res) => {
   res.sendFile(path.resolve("frontend/dist/index.html"));

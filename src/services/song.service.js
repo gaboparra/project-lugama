@@ -8,6 +8,7 @@ const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // ── Filtro de versiones alternativas ─────────────────────────────────────────
+
 const ALTERNATIVE_VERSION_KEYWORDS = [
   // Remasters
   // "remaster",
