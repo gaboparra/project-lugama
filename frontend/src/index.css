@@ -248,12 +248,8 @@ body::before {
 }
 
 .site-footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
   text-align: center;
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1rem;
   font-size: 0.75rem;
   color: var(--white);
   opacity: 0.5;
