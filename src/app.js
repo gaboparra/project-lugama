@@ -7,7 +7,8 @@ import rateLimit from "express-rate-limit";
 import songRoutes from "./routes/song.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
-import challengeRoutes from "./routes/challenge.routes.js";
+// import challengeRoutes from "./routes/challenge.routes.js";
+// import stickerRoutes from "./routes/sticker.routes.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
 
 const app = express();
@@ -33,7 +34,8 @@ const __dirname = path.dirname(__filename);
 app.use("/api/songs", songRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
-app.use("/api/challenges", challengeRoutes);
+// app.use("/api/challenges", challengeRoutes);
+// app.use("/api/stickers", stickerRoutes);
 
 // React build
 app.use(express.static(path.resolve("frontend/dist")));

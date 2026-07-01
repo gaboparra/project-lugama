@@ -317,7 +317,7 @@ export const searchSongsInDb = async (q) => {
         },
       },
     },
-    { $limit: 50 },
+    { $limit: 100 },
     {
       $project: {
         _id: 1,
