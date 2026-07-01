@@ -1,64 +1,15 @@
 import { useState, useRef, useEffect } from "react";
+import {Play, Pause, Volume2, Volume1, VolumeX } from 'lucide-react'
 import Dots from "./Dots";
 
-const PlayIcon = () => (
-  <svg viewBox="0 0 24 24" fill="white" width={18} height={18}>
-    <path d="M6 3l14 9-14 9V3z" />
-  </svg>
-);
-
-const PauseIcon = () => (
-  <svg viewBox="0 0 24 24" fill="white" width={18} height={18}>
-    <rect x="5" y="3" width="4" height="18" rx="1" />
-    <rect x="15" y="3" width="4" height="18" rx="1" />
-  </svg>
-);
-
+const PlayIcon   = () => <Play  size={18} fill="white" stroke="none" />
+const PauseIcon  = () => <Pause size={18} fill="white" stroke="none" />
+ 
 const VolumeIcon = ({ level }) => {
-  if (level === 0)
-    return (
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={2}
-        width={16}
-        height={16}
-      >
-        <path d="M11 5L6 9H2v6h4l5 4V5z" />
-        <line x1="23" y1="9" x2="17" y2="15" />
-        <line x1="17" y1="9" x2="23" y2="15" />
-      </svg>
-    );
-  if (level < 0.5)
-    return (
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={2}
-        width={16}
-        height={16}
-      >
-        <path d="M11 5L6 9H2v6h4l5 4V5z" />
-        <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-      </svg>
-    );
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      width={16}
-      height={16}
-    >
-      <path d="M11 5L6 9H2v6h4l5 4V5z" />
-      <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-      <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-    </svg>
-  );
-};
+  if (level === 0)  return <VolumeX size={16} />
+  if (level < 0.5)  return <Volume1 size={16} />
+  return                   <Volume2 size={16} />
+}
 
 export default function Player({
   attempt,
@@ -92,7 +43,6 @@ export default function Player({
   const segDur = TIME_LIMITS[attempt] - segStart;
   const segFill = Math.min(Math.max((time - segStart) / segDur, 0), 1) * 100;
 
-  // Fix 6to segmento: si TIME_LIMITS[i+1] no existe, va hasta el total
   const segments = Array.from({ length: MAX_ATTEMPTS }, (_, i) => {
     const from = TIME_LIMITS[i] || 0;
     const to = TIME_LIMITS[i + 1];
@@ -120,7 +70,6 @@ export default function Player({
         </span>
       </div>
 
-      {/* Barra de segmentos */}
       <div className="relative flex items-center gap-1" style={{ height: 28 }}>
         <div className="bar-indicator" style={{ left: `${indicatorPct}%` }} />
 
@@ -155,7 +104,6 @@ export default function Player({
         })}
       </div>
 
-      {/* Controles */}
       <div className="flex items-center gap-3">
         <button className="btn-play" onClick={onTogglePlay}>
           {isPlaying ? <PauseIcon /> : <PlayIcon />}

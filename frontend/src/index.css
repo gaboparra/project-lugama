@@ -277,7 +277,7 @@ body::before {
   color: var(--purple-h);
 }
 
-/* ── Dots (reusan seg-done / seg-active / seg-idle del Player) ── */
+/* ── Dots  */
 .seg-idle {
   background: var(--border);
 }

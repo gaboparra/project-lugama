@@ -60,7 +60,6 @@ export default function GamePage() {
     loadSong();
   }, []);
 
-  // Cerrar dropdown al clickear fuera
   useEffect(() => {
     const handler = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target))
@@ -149,7 +148,6 @@ export default function GamePage() {
           {revealedSong && <SongReveal song={revealedSong} />}
 
           <div className="flex flex-col gap-2">
-            {/* Dropdown custom — reemplaza el datalist nativo */}
             <div className="relative" ref={dropdownRef}>
               <input
                 className="input-base"

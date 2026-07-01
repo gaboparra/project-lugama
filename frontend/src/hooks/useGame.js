@@ -25,7 +25,6 @@ export default function useGame(onUserUpdate) {
   const frameRef      = useRef(null)
   const attemptRef    = useRef(1)
   const gameOverRef   = useRef(false)
-  // Refs para los filtros — siempre tienen el valor actual sin closure stale
   const genreRef      = useRef('')
   const artistRef     = useRef('')
   const difficultyRef = useRef(null)
@@ -80,7 +79,6 @@ export default function useGame(onUserUpdate) {
     try { setArtists(await getArtists()) } catch {}
   }, [])
 
-  // loadSong siempre lee de las refs — nunca tiene closure stale
   const loadSong = useCallback(async (g, d, a) => {
     const selectedGenre      = g !== undefined ? g : genreRef.current
     const selectedDifficulty = d !== undefined ? d : difficultyRef.current
@@ -103,11 +101,11 @@ export default function useGame(onUserUpdate) {
         audioRef.current.load()
       }
     } catch (e) { console.error(e) }
-  }, [])  // sin dependencias — usa refs
+  }, [])  
 
 const changeGenre = useCallback((g) => {
   genreRef.current  = g
-  artistRef.current = ''   // limpiar artista siempre
+  artistRef.current = ''   
   setGenre(g)
   setArtist('')
   loadSong(g, difficultyRef.current, '')
@@ -122,7 +120,7 @@ const changeGenre = useCallback((g) => {
 
 const changeArtist = useCallback((a) => {
   artistRef.current = a
-  genreRef.current  = ''   // limpiar género siempre
+  genreRef.current  = ''   
   setArtist(a)
   setGenre('')
   loadSong('', difficultyRef.current, a)
