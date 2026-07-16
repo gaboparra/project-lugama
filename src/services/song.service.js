@@ -53,7 +53,7 @@ const ALTERNATIVE_VERSION_KEYWORDS = [
   // 'album version' → en realidad ES la versión original en muchos casos
 ];
 
-const isAlternativeVersion = (title) => {
+export const isAlternativeVersion = (title) => {
   const lower = title.toLowerCase();
   return ALTERNATIVE_VERSION_KEYWORDS.some((kw) => lower.includes(kw));
 };
