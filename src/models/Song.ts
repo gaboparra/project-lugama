@@ -1,6 +1,20 @@
-import mongoose from "mongoose";
+import mongoose, { Document, Schema } from "mongoose";
 
-const SongSchema = new mongoose.Schema(
+export interface ISong extends Document {
+  deezerId: number;
+  previewUrl: string;
+  playcount: number;
+  popularity: number;
+  albumName?: string | null;
+  durationMs?: number | null;
+  title: string;
+  artist: string;
+  albumCover?: string;
+  difficulty: number | null;
+  genre: string;
+}
+
+const SongSchema = new Schema<ISong>(
   {
     // Deezer
     deezerId: { type: Number, unique: true, required: true },
@@ -26,7 +40,7 @@ SongSchema.index({ title: "text", artist: "text" });
 
 // Manual si está seteada, si no se deriva de popularity
 // 1 = fácil (muy popular), 4 = difícil (poco conocida)
-SongSchema.virtual("effectiveDifficulty").get(function () {
+SongSchema.virtual("effectiveDifficulty").get(function (this: ISong) {
   if (this.difficulty !== null && this.difficulty !== undefined)
     return this.difficulty;
   if (this.popularity >= 75) return 1;
@@ -35,4 +49,4 @@ SongSchema.virtual("effectiveDifficulty").get(function () {
   return 4;
 });
 
-export default mongoose.model("Song", SongSchema);
+export default mongoose.model<ISong>("Song", SongSchema);

@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request } from "express";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -19,7 +19,7 @@ const globalLimiter = rateLimit({
   message: { error: "Too many requests, please try again later" },
   standardHeaders: true,
   legacyHeaders: false,
-  skip: (req) => req.path.startsWith("/api/songs/search"),
+  skip: (req: Request) => req.path.startsWith("/api/songs/search"),
 });
 
 app.use(globalLimiter);
