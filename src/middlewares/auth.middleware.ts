@@ -5,7 +5,7 @@ import { AuthRequest } from "../types/express.js";
 export const protect = async (
   req: AuthRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   let token: string | undefined;
 

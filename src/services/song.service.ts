@@ -82,7 +82,9 @@ interface DeezerSearchResponse {
   data: DeezerTrack[];
 }
 
-const fetchAllDeezerTracks = async (artistQuery: string): Promise<DeezerTrack[]> => {
+const fetchAllDeezerTracks = async (
+  artistQuery: string,
+): Promise<DeezerTrack[]> => {
   const allTracks: DeezerTrack[] = [];
   let index = 0;
 
@@ -114,13 +116,19 @@ interface SeedSongsResult {
   total_in_db: number;
 }
 
-export const seedSongs = async ({ artists, genre }: SeedSongsInput): Promise<SeedSongsResult> => {
+export const seedSongs = async ({
+  artists,
+  genre,
+}: SeedSongsInput): Promise<SeedSongsResult> => {
   let added = 0,
     skipped = 0,
     noPreview = 0,
     filtered = 0;
 
-  const lastfmCache = new Map<string, Awaited<ReturnType<typeof getLastfmData>>>();
+  const lastfmCache = new Map<
+    string,
+    Awaited<ReturnType<typeof getLastfmData>>
+  >();
 
   for (const artistQuery of artists) {
     const tracks = await fetchAllDeezerTracks(artistQuery);
@@ -131,7 +139,8 @@ export const seedSongs = async ({ artists, genre }: SeedSongsInput): Promise<See
         continue;
       }
 
-      if (track.artist.name.toLowerCase() !== artistQuery.toLowerCase()) continue;
+      if (track.artist.name.toLowerCase() !== artistQuery.toLowerCase())
+        continue;
 
       if (isAlternativeVersion(track.title)) {
         console.log(`FILTERED: ${track.title}`);
@@ -202,7 +211,9 @@ export const getAllSongs = async () => {
 };
 
 export const updateSong = async (id: string, data: Partial<ISong>) => {
-  const song = await Song.findByIdAndUpdate(id, data, { returnDocument: "after" });
+  const song = await Song.findByIdAndUpdate(id, data, {
+    returnDocument: "after",
+  });
   if (!song) throw createError("Song not found", 404);
   return song;
 };
@@ -235,10 +246,14 @@ export const getRandomSong = async (
   }
 
   const count = await Song.countDocuments(filter);
-  if (count === 0) throw createError("No songs found for this filter combination", 404);
+  if (count === 0)
+    throw createError("No songs found for this filter combination", 404);
 
-  const song = await Song.findOne(filter).skip(Math.floor(Math.random() * count));
-  if (!song) throw createError("No songs found for this filter combination", 404);
+  const song = await Song.findOne(filter).skip(
+    Math.floor(Math.random() * count),
+  );
+  if (!song)
+    throw createError("No songs found for this filter combination", 404);
 
   try {
     const response = await axios.get<DeezerSearchResponse>(
@@ -260,7 +275,12 @@ interface ValidateAnswerInput {
   userId: string;
 }
 
-export const validateAnswer = async ({ songId, answer, attempt, userId }: ValidateAnswerInput) => {
+export const validateAnswer = async ({
+  songId,
+  answer,
+  attempt,
+  userId,
+}: ValidateAnswerInput) => {
   const song = await Song.findById(songId);
   if (!song) throw createError("Song not found", 404);
 
@@ -305,7 +325,13 @@ export const searchSongsInDb = async (q: string) => {
         index: "default",
         compound: {
           should: [
-            { text: { query: q, path: ["title", "artist"], fuzzy: { maxEdits: 1 } } },
+            {
+              text: {
+                query: q,
+                path: ["title", "artist"],
+                fuzzy: { maxEdits: 1 },
+              },
+            },
             { autocomplete: { query: q, path: "title" } },
             { autocomplete: { query: q, path: "artist" } },
           ],
@@ -337,4 +363,5 @@ export const getGenres = async (): Promise<string[]> => {
   return Song.distinct("genre");
 };
 
-export const getArtists = async (): Promise<string[]> => Song.distinct("artist");
+export const getArtists = async (): Promise<string[]> =>
+  Song.distinct("artist");

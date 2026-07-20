@@ -5,12 +5,6 @@ interface AppError extends Error {
   status?: number;
 }
 
-// const createError = (message: string, status: number): AppError => {
-//   const error = new Error(message) as AppError;
-//   error.status = status;
-//   return error;
-// };
-
 export const getRankingList = async () => {
   return User.find().select("username points").sort({ points: -1 }).limit(10);
 };
