@@ -1,5 +1,6 @@
+import bcrypt from "bcrypt";
 import { OAuth2Client } from "google-auth-library";
-import User from "../models/User.js";
+import prisma from "../config/prisma.js";
 import { generateToken } from "../utils/generateToken.js";
 import { createError } from "../utils/errors.js";
 
@@ -14,16 +15,23 @@ export const registerUser = async ({
   email,
   password,
 }: RegisterUserInput) => {
-  const existing = await User.findOne({ $or: [{ email }, { username }] });
+  const existing = await prisma.user.findFirst({
+    where: { OR: [{ email }, { username }] },
+  });
   if (existing) throw createError("User or email already in use", 400);
 
-  const user = await User.create({ username, email, password });
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  const user = await prisma.user.create({
+    data: { username, email, password: hashedPassword },
+  });
+
   const token = generateToken(user);
 
   return {
     token,
     user: {
-      id: user._id,
+      id: user.id,
       username: user.username,
       points: user.points,
       stars: user.stars,
@@ -37,17 +45,18 @@ interface LoginUserInput {
 }
 
 export const loginUser = async ({ email, password }: LoginUserInput) => {
-  const user = await User.findOne({ email });
-  if (!user) throw createError("Invalid credentials", 400);
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user || !user.password) throw createError("Invalid credentials", 400);
 
-  const isMatch = await user.comparePassword(password);
+  const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) throw createError("Invalid credentials", 400);
 
   const token = generateToken(user);
+
   return {
     token,
     user: {
-      id: user._id,
+      id: user.id,
       username: user.username,
       points: user.points,
       stars: user.stars,
@@ -55,8 +64,19 @@ export const loginUser = async ({ email, password }: LoginUserInput) => {
   };
 };
 
-export const getProfile = async (userId: string) => {
-  const user = await User.findById(userId).select("-password");
+export const getProfile = async (userId: number) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      username: true,
+      email: true,
+      points: true,
+      stars: true,
+      role: true,
+      createdAt: true,
+    },
+  });
   if (!user) throw createError("User not found", 404);
   return user;
 };
@@ -73,14 +93,21 @@ export const googleLoginUser = async (idToken: string) => {
   if (!payload) throw createError("Invalid Google token", 400);
 
   const { email, name, sub: googleId } = payload;
-  let user = await User.findOne({ email });
-  if (!user) user = await User.create({ username: name, email, googleId });
+  if (!email || !name) throw createError("Invalid Google token", 400);
+
+  let user = await prisma.user.findUnique({ where: { email } });
+  if (!user) {
+    user = await prisma.user.create({
+      data: { username: name, email, googleId },
+    });
+  }
 
   const token = generateToken(user);
+
   return {
     token,
     user: {
-      id: user._id,
+      id: user.id,
       username: user.username,
       points: user.points,
       stars: user.stars,

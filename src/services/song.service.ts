@@ -1,6 +1,6 @@
 import axios from "axios";
 import Song, { ISong } from "../models/Song.js";
-import User from "../models/User.js";
+import prisma from "../config/prisma.js";
 import { normalizeText } from "../utils/normalizeSong.js";
 import { getLastfmData } from "./lastfm.service.js";
 import { createError } from "../utils/errors.js";
@@ -272,7 +272,7 @@ interface ValidateAnswerInput {
   songId: string;
   answer: string;
   attempt: number;
-  userId: string;
+  userId: number;
 }
 
 export const validateAnswer = async ({
@@ -288,16 +288,15 @@ export const validateAnswer = async ({
 
   if (isCorrect) {
     const pointsEarned = Math.max(7 - attempt, 1);
-    const update: { $inc: { points: number; stars?: number } } = {
-      $inc: { points: pointsEarned },
-    };
-    if (attempt === 1) update.$inc.stars = 1;
 
-    const user = await User.findByIdAndUpdate(userId, update, {
-      returnDocument: "after",
-    }).select("-password");
-
-    if (!user) throw createError("User not found", 404);
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        points: { increment: pointsEarned },
+        ...(attempt === 1 && { stars: { increment: 1 } }),
+      },
+      select: { points: true, stars: true },
+    });
 
     return {
       correct: true,

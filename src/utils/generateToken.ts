@@ -1,8 +1,7 @@
 import jwt from "jsonwebtoken";
-import { Types } from "mongoose";
 
 interface UserForToken {
-  _id: Types.ObjectId | string;
+  id: number;
   username: string;
   role: string;
 }
@@ -10,7 +9,7 @@ interface UserForToken {
 export const generateToken = (user: UserForToken): string => {
   return jwt.sign(
     {
-      id: user._id,
+      id: user.id,
       username: user.username,
       role: user.role,
     },

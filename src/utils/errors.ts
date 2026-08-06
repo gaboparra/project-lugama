@@ -8,7 +8,9 @@ export const createError = (message: string, status: number): AppError => {
   return error;
 };
 
-export const getErrorInfo = (error: unknown): { status: number; message: string } => {
+export const getErrorInfo = (
+  error: unknown,
+): { status: number; message: string } => {
   if (error instanceof Error) {
     const status = (error as AppError).status || 500;
     return { status, message: error.message };

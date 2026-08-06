@@ -1,8 +1,7 @@
-import { Response } from "express";
+import { Response, Request } from "express";
 import * as authService from "../services/auth.service.js";
 import { AuthRequest } from "../types/express.js";
 import { getErrorInfo } from "../utils/errors.js";
-import { Request } from "express";
 
 export const register = async (req: Request, res: Response) => {
   try {

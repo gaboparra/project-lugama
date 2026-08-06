@@ -1,3 +1,5 @@
+import { jest } from "@jest/globals";
+import prisma from "../src/config/prisma.js";
 import axios from "axios";
 import {
   isAlternativeVersion,
@@ -16,11 +18,18 @@ import {
 
 jest.mock("axios");
 
+jest.mock("../src/config/prisma.js", () => ({
+  __esModule: true,
+  default: {
+    user: {
+      update: jest.fn(),
+    },
+  },
+}));
+
 import Song from "../src/models/Song.js";
-import User from "../src/models/User.js";
 
 jest.mock("../src/models/Song.js");
-jest.mock("../src/models/User.js");
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -29,15 +38,13 @@ beforeEach(() => {
 describe("validateAnswer", () => {
   it("respuesta correcta en el primer intento suma puntos y estrella", async () => {
     Song.findById.mockResolvedValue({ _id: "1", title: "Bohemian Rhapsody" });
-    User.findByIdAndUpdate.mockReturnValue({
-      select: jest.fn().mockResolvedValue({ points: 6, stars: 1 }),
-    });
+    prisma.user.update.mockResolvedValue({ points: 6, stars: 1 });
 
     const result = await validateAnswer({
       songId: "1",
       answer: "bohemian rhapsody",
       attempt: 1,
-      userId: "user1",
+      userId: 1,
     });
 
     expect(result.correct).toBe(true);
@@ -47,19 +54,17 @@ describe("validateAnswer", () => {
 
   it("respuesta correcta en intento 3 no suma estrella y da menos puntos", async () => {
     Song.findById.mockResolvedValue({ _id: "1", title: "Bohemian Rhapsody" });
-    User.findByIdAndUpdate.mockReturnValue({
-      select: jest.fn().mockResolvedValue({ points: 4, stars: 0 }),
-    });
+    prisma.user.update.mockResolvedValue({ points: 4, stars: 0 });
 
     const result = await validateAnswer({
       songId: "1",
       answer: "bohemian rhapsody",
       attempt: 3,
-      userId: "user1",
+      userId: 1,
     });
 
     expect(result.correct).toBe(true);
-    expect(result.pointsEarned).toBe(4); // 7 - 3
+    expect(result.pointsEarned).toBe(4);
     expect(result.starEarned).toBe(false);
   });
 
@@ -70,7 +75,7 @@ describe("validateAnswer", () => {
       songId: "1",
       answer: "cancion equivocada",
       attempt: 2,
-      userId: "user1",
+      userId: 1,
     });
 
     expect(result.correct).toBe(false);
@@ -84,7 +89,7 @@ describe("validateAnswer", () => {
       songId: "1",
       answer: "cancion equivocada",
       attempt: 6,
-      userId: "user1",
+      userId: 1,
     });
 
     expect(result.correct).toBe(false);
@@ -99,7 +104,7 @@ describe("validateAnswer", () => {
         songId: "999",
         answer: "cualquiera",
         attempt: 1,
-        userId: "user1",
+        userId: 1,
       }),
     ).rejects.toThrow("Song not found");
   });
