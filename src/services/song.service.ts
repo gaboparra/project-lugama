@@ -158,9 +158,10 @@ export const seedSongs = async ({
       // tipo "TINI" / "Tini". Se resuelve una sola vez por artista.
       if (!artistCasingCache.has(artistQuery.toLowerCase())) {
         const escapedArtist = escapeRegExp(track.artist.name);
-        const existingArtist = await Song.findOne({
-          artist: { $regex: `^${escapedArtist}$`, $options: "i" },
-        }).select("artist");
+        const existingArtist = await Song.findOne(
+          { artist: { $regex: `^${escapedArtist}$`, $options: "i" } },
+          "artist",
+        );
         artistCasingCache.set(
           artistQuery.toLowerCase(),
           existingArtist?.artist || track.artist.name,
