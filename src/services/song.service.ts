@@ -130,6 +130,11 @@ export const seedSongs = async ({
     Awaited<ReturnType<typeof getLastfmData>>
   >();
 
+  // Cachea, por cada artistQuery (en minúsculas), el casing "canónico" a usar:
+  // si ya existe ese artista en la DB con cualquier casing, se reusa ese;
+  // si no, se usa el que devuelve Deezer la primera vez que aparece.
+  const artistCasingCache = new Map<string, string>();
+
   for (const artistQuery of artists) {
     const tracks = await fetchAllDeezerTracks(artistQuery);
 
@@ -148,10 +153,25 @@ export const seedSongs = async ({
         continue;
       }
 
+      // Si ya existe este artista en la DB (con cualquier casing), reusamos
+      // ESE casing en vez del que vino de Deezer, para no crear duplicados
+      // tipo "TINI" / "Tini". Se resuelve una sola vez por artista.
+      if (!artistCasingCache.has(artistQuery.toLowerCase())) {
+        const escapedArtist = escapeRegExp(track.artist.name);
+        const existingArtist = await Song.findOne({
+          artist: { $regex: `^${escapedArtist}$`, $options: "i" },
+        }).select("artist");
+        artistCasingCache.set(
+          artistQuery.toLowerCase(),
+          existingArtist?.artist || track.artist.name,
+        );
+      }
+      const canonicalArtist = artistCasingCache.get(artistQuery.toLowerCase())!;
+
       const escaped = escapeRegExp(track.title);
       const duplicate = await Song.findOne({
         title: { $regex: `^${escaped}$`, $options: "i" },
-        artist: track.artist.name,
+        artist: { $regex: `^${escapeRegExp(canonicalArtist)}$`, $options: "i" },
       });
       if (duplicate) {
         skipped++;
@@ -164,9 +184,9 @@ export const seedSongs = async ({
         continue;
       }
 
-      const cacheKey = `${track.title}-${track.artist.name}`;
+      const cacheKey = `${track.title}-${canonicalArtist}`;
       if (!lastfmCache.has(cacheKey)) {
-        const result = await getLastfmData(track.title, track.artist.name);
+        const result = await getLastfmData(track.title, canonicalArtist);
         lastfmCache.set(cacheKey, result);
       }
       const lastfmData = lastfmCache.get(cacheKey);
@@ -174,7 +194,7 @@ export const seedSongs = async ({
       await Song.create({
         deezerId: track.id,
         title: track.title,
-        artist: track.artist.name,
+        artist: canonicalArtist,
         previewUrl: track.preview,
         albumCover: track.album?.cover_medium || "",
         genre: genre || "General",
